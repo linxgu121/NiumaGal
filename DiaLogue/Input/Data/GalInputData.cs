@@ -9,10 +9,10 @@ namespace NiumaGal.DiaLogue.Input.Data
         /// <summary>
         /// 当前帧输入数据
         /// </summary>
-        public GalFrameInputData CurrentFrameData;
+        public GalFrameInputData currentFrameData;
         /// <summary>
         /// 上一帧输入数据
         /// </summary>
-        public GalFrameInputData LastFrameData;
+        public GalFrameInputData lastFrameData;
     }
 }

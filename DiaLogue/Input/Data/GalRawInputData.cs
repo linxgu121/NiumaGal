@@ -2,7 +2,7 @@ namespace NiumaGal.DiaLogue.Input.Data
 {
     /// <summary>
     /// 原始输入采样数据
-    /// 由 InputSource 每帧从硬件/InputSystem 采样写入
+    /// 由 InputSource 每帧从硬件采样写入
     /// </summary>
     public struct GalRawInputData
     {
