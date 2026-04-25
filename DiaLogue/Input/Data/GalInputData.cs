@@ -1,4 +1,4 @@
-namespace NiumaGal.DiaLogue.Input.Data
+namespace NiumaGal.Dialogue.Input.Data
 {
     /// <summary>
     /// 堆内存输入黑板

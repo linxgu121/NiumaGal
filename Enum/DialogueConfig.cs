@@ -10,7 +10,7 @@ namespace NiumaGal.Enum
         /// <summary>
         /// 手动播放：玩家点击推进
         /// </summary>
-        Manuall,
+        Manual,
         /// <summary>
         /// 自动播放：台词行完成后自动推进下一行
         /// </summary>

@@ -1,6 +1,6 @@
-using NiumaGal.DiaLogue.Input.Data;
+using NiumaGal.Dialogue.Input.Data;
 
-namespace NiumaGal.DiaLogue.Input.Base
+namespace NiumaGal.Dialogue.Input.Base
 {
     /// <summary>
     /// 输入源接口 所有输入来源都要实现接口

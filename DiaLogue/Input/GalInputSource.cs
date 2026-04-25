@@ -1,14 +1,14 @@
-using NiumaGal.DiaLogue.Input.Base;
-using NiumaGal.DiaLogue.Input.Data;
+using NiumaGal.Dialogue.Input.Base;
+using NiumaGal.Dialogue.Input.Data;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace NiumaGal.DiaLogue.Input
+namespace NiumaGal.Dialogue.Input
 {
     /// <summary>
     /// 对话输入源
     /// </summary>
-    public class GalInputSoure : InputSourceBase
+    public class GalInputSource : InputSourceBase
     {
         [Header("输入动作引用")]
         public InputActionReference advanceAction;

@@ -1,4 +1,4 @@
-namespace NiumaGal.DiaLogue.Input.Data
+namespace NiumaGal.Dialogue.Input.Data
 {
     /// <summary>
     /// 后处理数据

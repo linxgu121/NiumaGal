@@ -1,4 +1,4 @@
-namespace NiumaGal.DiaLogue.Input.Data
+namespace NiumaGal.Dialogue.Input.Data
 {
     public struct GalFrameInputData
     {

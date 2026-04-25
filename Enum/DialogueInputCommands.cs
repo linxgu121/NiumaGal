@@ -33,6 +33,10 @@ namespace NiumaGal.Enum
         /// </summary>
         Log,
         /// <summary>
+        /// 切换UI显示（显示/隐藏对话框、角色立绘等界面元素）
+        /// </summary>
+        HideUI,
+        /// <summary>
         /// 存档
         /// </summary>
         Save,

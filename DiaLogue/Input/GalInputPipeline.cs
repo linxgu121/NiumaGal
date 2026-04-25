@@ -1,8 +1,8 @@
-using NiumaGal.DiaLogue.Input.Base;
-using NiumaGal.DiaLogue.Input.Data;
+using NiumaGal.Dialogue.Input.Base;
+using NiumaGal.Dialogue.Input.Data;
 using UnityEngine;
 
-namespace NiumaGal.DiaLogue.Input
+namespace NiumaGal.Dialogue.Input
 {
     /// <summary>
     /// 系统流转的第一道关卡 唯一的数据生产者

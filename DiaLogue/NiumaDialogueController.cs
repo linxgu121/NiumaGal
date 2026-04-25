@@ -1,18 +1,15 @@
-using System.Collections;
-using System.Collections.Generic;
+using NiumaGal.Dialogue.Input;
 using UnityEngine;
 
-public class NiumaDialogueController : MonoBehaviour
+namespace NiumaGal.Dialogue
 {
-    // Start is called before the first frame update
-    void Start()
+    /// <summary>
+    /// NiumaGal 对话系统总控制器
+    /// 负责子系统初始化与驱动
+    /// </summary>
+    public class NiumaDialogueController : MonoBehaviour
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        [Header("输入源")]
+        public GalInputSource InputSourceRef;
     }
 }

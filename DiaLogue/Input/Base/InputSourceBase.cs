@@ -1,7 +1,8 @@
-using NiumaGal.DiaLogue.Input.Data;
+using NiumaGal.Dialogue.Config.Core;
+using NiumaGal.Dialogue.Input.Data;
 using UnityEngine;
 
-namespace NiumaGal.DiaLogue.Input.Base
+namespace NiumaGal.Dialogue.Input.Base
 {
     /// <summary>
     /// 输入源基类
@@ -10,12 +11,19 @@ namespace NiumaGal.DiaLogue.Input.Base
     /// </summary>
     public abstract class InputSourceBase :  MonoBehaviour,IInputSource
     {
+        [Header("输入配置引用（可选，未赋值则使用下方默认值）")]
+        public DialogueInputSO InputConfig;
+
+         // 运行时实际使用的值
+        public float ActionBufferTime => InputConfig != null ? InputConfig.ActionBufferTime : _defaultActionBufferTime;
+        public float FastForwardThreshold => InputConfig != null ? InputConfig.FastForwardThreshold : _defaultFastForwardThreshold;
+
         [Header("输入缓冲设置")]
-        [Tooltip("推进键的防抖缓存时间(秒),用于抖动抑制")]
-        public float ActionBufferTime = 0.2f;
+        [SerializeField,Tooltip("推进键的防抖缓存时间(秒),用于抖动抑制")]
+         private float _defaultActionBufferTime = 0.2f;
         [Header("快进设置")]
-        [Tooltip("长按推进触发快进的时间阈值(秒)")]
-        public float FastForwardThreshold = 0.5f;
+        [SerializeField,Tooltip("长按推进触发快进的时间阈值(秒)")]
+        private float _defaultFastForwardThreshold = 0.5f;
 
         /// <summary>
         /// 是否被阻塞（由外部系统如菜单、暂停设置）

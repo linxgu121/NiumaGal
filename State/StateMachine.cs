@@ -12,6 +12,7 @@ namespace NiumaGal.State
         public void Initialize(StateBase startingState)
         {
             CurrentState = startingState;
+            CurrentState.OwnerStateMachine = this;
             CurrentState.Enter();
         }
         /// <summary>
@@ -22,6 +23,7 @@ namespace NiumaGal.State
         {
             CurrentState.Exit();
             CurrentState = newState;
+            CurrentState.OwnerStateMachine = this;
             CurrentState.Enter();
         }
     }

@@ -11,11 +11,11 @@ namespace NiumaGal.Enum
         /// <summary>
         /// 未交互（对话系统待机）
         /// </summary>
-        idle,
+        Idle,
         /// <summary>
         /// 正在交互中（对话流程已启动）
         /// </summary>
-        interact
+        Interacting
     }
 
     /// <summary>
@@ -26,11 +26,11 @@ namespace NiumaGal.Enum
         /// <summary>
         /// 空闲（无对话内容）
         /// </summary>
-        idle,
+        Idle,
         /// <summary>
         /// 当前句正在进行中，等待结束
         /// </summary>
-        running,
+        Running,
         /// <summary>
         /// 当前句已结束，等待推进
         /// </summary>
@@ -58,7 +58,7 @@ namespace NiumaGal.Enum
         /// <summary>
         /// 当前台词行文字已完整显示（语音可能继续播放），等待玩家点击推进
         /// </summary>
-        completed
+        Completed
     }
 
     /// <summary>
