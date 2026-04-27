@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace NiumaGal.Dialogue.Config
 {
-    [CreateAssetMenu(fileName = "NiumaGalSO", menuName = "NiumaGal/Config/NiumaGalSO", order = 0)]
-    public class NiumaGalSO
+    [CreateAssetMenu(fileName = "NiumaGalSO", menuName = "NiumaGal/Config/NiumaGalSO")]
+    public class NiumaGalSO : ScriptableObject
     {
         [Header("核心功能模块")]
         [Tooltip("打字机与自动播放参数")]

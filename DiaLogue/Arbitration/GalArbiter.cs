@@ -29,11 +29,6 @@ namespace NiumaGal.Dialogue.Arbitration
         public event Action OnSkipTypewriter;
         public event Action OnStopVoice;
         public event Action OnDialogueClosed;
-        public event Action OnOpenMenu;
-        public event Action OnOpenLog;
-        public event Action OnHideUI;
-        public event Action<object> OnSave;
-        public event Action<object> OnLoad;
 
          public bool ProcessInput(in InputRequest request)
         {
@@ -45,11 +40,6 @@ namespace NiumaGal.Dialogue.Arbitration
                 InputCommand.FastForward => HandleFastForward(),
                 InputCommand.SkipUnit => HandleSkipUnit(),
                 InputCommand.ToggleAuto => HandleToggleAuto(),
-                InputCommand.Menu => HandleMenu(),
-                InputCommand.Log => HandleLog(),
-                InputCommand.HideUI => HandleHideUI(),
-                InputCommand.Save => HandleSave(request.Context),
-                InputCommand.Load => HandleLoad(request.Context),
                 _ => false
             };
         }
@@ -130,12 +120,6 @@ namespace NiumaGal.Dialogue.Arbitration
             );
             return true;
         }
-
-         private bool HandleMenu() { OnOpenMenu?.Invoke(); return true; }
-        private bool HandleLog() { OnOpenLog?.Invoke(); return true; }
-        private bool HandleHideUI() { OnHideUI?.Invoke(); return true; }
-        private bool HandleSave(object ctx) { OnSave?.Invoke(ctx); return true; }
-        private bool HandleLoad(object ctx) { OnLoad?.Invoke(ctx); return true; }
 
         /// <summary>
         /// 由外部交互系统调用以启动对话

@@ -24,25 +24,5 @@ namespace NiumaGal.Dialogue.Input.Data
         /// 切换自动推进（长按无效，避免误触）
         /// </summary>
         public bool ToggleAutoJustPressed;
-        /// <summary>
-        /// 打开菜单（长按无效，避免误触）
-        /// </summary>
-        public bool MenuJustPressed;
-        /// <summary>
-        /// 历史记录（长按无效，避免误触）
-        /// </summary>
-        public bool LogJustPressed;
-        /// <summary>
-        /// 隐藏/显示 UI（长按无效，避免误触）
-        /// </summary>
-        public bool HideUIJustPressed;
-        /// <summary>
-        /// 保存进度（长按无效，避免误触）
-        /// </summary>
-        public bool SaveJustPressed;
-        /// <summary>
-        /// 读取进度（长按无效，避免误触）
-        /// </summary>
-        public bool LoadJustPressed;
     }
 }

@@ -15,10 +15,5 @@ namespace NiumaGal.Dialogue.Input.Data
         // 仅透传 JustPressed，无缓存
         public bool SkipUnitJustPressed;
         public bool ToggleAutoJustPressed;
-        public bool MenuJustPressed;
-        public bool LogJustPressed;
-        public bool HideUIJustPressed;
-        public bool SaveJustPressed;
-        public bool LoadJustPressed;
     }
 }

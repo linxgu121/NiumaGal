@@ -14,13 +14,8 @@ namespace NiumaGal.Dialogue.Input
         public InputActionReference advanceAction;
         public InputActionReference skipUnitAction;
         public InputActionReference toggleAutoAction;
-        public InputActionReference menuAction;
-        public InputActionReference logAction;
-        public InputActionReference hideUIAction;
-        public InputActionReference saveAction;
-        public InputActionReference loadAction;
 
-         private void OnEnable() => ToggleActions(true);
+        private void OnEnable() => ToggleActions(true);
         private void OnDisable() => ToggleActions(false);
 
         public override void FetchRawInput(ref GalRawInputData rawData)
@@ -32,11 +27,7 @@ namespace NiumaGal.Dialogue.Input
             // 其他命令仅采样 JustPressed
             rawData.SkipUnitJustPressed = skipUnitAction?.action.WasPressedThisFrame() ?? false;
             rawData.ToggleAutoJustPressed = toggleAutoAction?.action.WasPressedThisFrame() ?? false;
-            rawData.MenuJustPressed = menuAction?.action.WasPressedThisFrame() ?? false;
-            rawData.LogJustPressed = logAction?.action.WasPressedThisFrame() ?? false;
-            rawData.HideUIJustPressed = hideUIAction?.action.WasPressedThisFrame() ?? false;
-            rawData.SaveJustPressed = saveAction?.action.WasPressedThisFrame() ?? false;
-            rawData.LoadJustPressed = loadAction?.action.WasPressedThisFrame() ?? false;
+            
         }
 
         /// <summary>
@@ -46,8 +37,7 @@ namespace NiumaGal.Dialogue.Input
         private void ToggleActions(bool enable)
         {
             InputActionReference[] all = {
-                advanceAction, skipUnitAction, toggleAutoAction, menuAction,
-                logAction, hideUIAction, saveAction, loadAction
+                advanceAction, skipUnitAction, toggleAutoAction
             };
 
             foreach (var ar in all)

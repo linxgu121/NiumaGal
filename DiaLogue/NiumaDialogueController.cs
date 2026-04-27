@@ -26,6 +26,10 @@ namespace NiumaGal.Dialogue
         [Header("自动播放驱动（可选，未赋值则自动创建）")]
         public AutoPlayDriver AutoPlayDriver;
 
+        [Header("TPC 输入阻塞（可选）")]
+        [Tooltip("对话中时，阻塞该输入源的输入")]
+        public BBBNexus.InputSourceBase TPCInputSource;
+
         // 核心系统
         public NiumaGalBlackboard Blackboard { get; private set; }
         public GalInputPipeline InputPipeline { get; private set; }
@@ -103,6 +107,15 @@ namespace NiumaGal.Dialogue
                 dp.SetDialogueAsset(asset);
 
             Arbiter.StartDialogue(asset);
+
+            TPCInputSource?.SetBlocked(true);
+        }
+
+        private void OnDialogueClosedInternal()
+        {
+            Presenter?.CloseDialogue();
+
+            TPCInputSource?.SetBlocked(false);
         }
 
         /// <summary>强制关闭当前对话</summary>
@@ -128,11 +141,6 @@ namespace NiumaGal.Dialogue
 
             if (proc.SkipUnitJustPressed) Arbiter.ProcessInput(new InputRequest(InputCommand.SkipUnit));
             if (proc.ToggleAutoJustPressed) Arbiter.ProcessInput(new InputRequest(InputCommand.ToggleAuto));
-            if (proc.MenuJustPressed) Arbiter.ProcessInput(new InputRequest(InputCommand.Menu));
-            if (proc.LogJustPressed) Arbiter.ProcessInput(new InputRequest(InputCommand.Log));
-            if (proc.HideUIJustPressed) Arbiter.ProcessInput(new InputRequest(InputCommand.HideUI));
-            if (proc.SaveJustPressed) Arbiter.ProcessInput(new InputRequest(InputCommand.Save));
-            if (proc.LoadJustPressed) Arbiter.ProcessInput(new InputRequest(InputCommand.Load));
         }
 
         /// <summary>
@@ -151,13 +159,7 @@ namespace NiumaGal.Dialogue
         {
             Arbiter.OnSkipTypewriter += () => Presenter?.SkipTypewriter();
             Arbiter.OnStopVoice += () => Presenter?.StopVoice();
-            Arbiter.OnDialogueClosed += () => Presenter?.CloseDialogue();
-            Arbiter.OnHideUI += () => Presenter?.HideUI();
-
-            Arbiter.OnOpenMenu += () => { /* 转发给外部 MenuManager */ };
-            Arbiter.OnOpenLog += () => { /* 转发给外部 LogManager */ };
-            Arbiter.OnSave += ctx => { /* 转发给外部 SaveManager */ };
-            Arbiter.OnLoad += ctx => { /* 转发给外部 LoadManager */ };
+            Arbiter.OnDialogueClosed += OnDialogueClosedInternal;
         }
 
         /// <summary>

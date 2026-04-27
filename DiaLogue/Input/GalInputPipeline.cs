@@ -127,11 +127,6 @@ namespace NiumaGal.Dialogue.Input
             // 其他命令直接透传（无缓存)
             currentFrame.Processed.SkipUnitJustPressed = _rawData.SkipUnitJustPressed;
             currentFrame.Processed.ToggleAutoJustPressed = _rawData.ToggleAutoJustPressed;
-            currentFrame.Processed.MenuJustPressed = _rawData.MenuJustPressed;
-            currentFrame.Processed.LogJustPressed = _rawData.LogJustPressed;
-            currentFrame.Processed.HideUIJustPressed = _rawData.HideUIJustPressed;
-            currentFrame.Processed.SaveJustPressed = _rawData.SaveJustPressed;
-            currentFrame.Processed.LoadJustPressed = _rawData.LoadJustPressed;
 
             // 将局部计算完毕的纯净数据 一次性写回堆内存 供全局读取
             _inputData.currentFrameData = currentFrame;
