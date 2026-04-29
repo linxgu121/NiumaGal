@@ -28,7 +28,7 @@ namespace NiumaGal.Dialogue
 
         [Header("TPC 输入阻塞（可选）")]
         [Tooltip("对话中时，阻塞该输入源的输入")]
-        public BBBNexus.InputSourceBase TPCInputSource;
+        public NiumaTPC.Character.Input.Base.InputSourceBase TPCInputSource;
 
         // 核心系统
         public NiumaGalBlackboard Blackboard { get; private set; }
