@@ -3,7 +3,9 @@
   "references": [
     "Unity.TextMeshPro",
     "Unity.InputSystem",
-    "NiumaTPC.Runtime"
+    "NiumaTPC.Runtime",
+    "NiumaUI.Runtime",
+    "NiumaInteract.Runtime"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],
