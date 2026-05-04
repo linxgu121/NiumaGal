@@ -15,22 +15,35 @@ namespace NiumaGal.Bridge
     public sealed class NiumaDialogueInteractable : MonoBehaviour, IInteractable
     {
         [Header("对话")]
+        [Tooltip("场景中的 NiumaDialogueController。为空且开启自动查找时，会在场景中查找。")]
         [SerializeField] private NiumaDialogueController dialogueController;
+        [Tooltip("该目标触发时播放的 DialogueAsset。未绑定时目标不可交互。")]
         [SerializeField] private DialogueAsset dialogueAsset;
+        [Tooltip("未手动绑定 DialogueController 时，是否自动在场景中查找。")]
         [SerializeField] private bool autoFindDialogueController = true;
+        [Tooltip("是否只允许在对话系统空闲时启动对话。通常保持开启，避免重复启动对话。")]
         [SerializeField] private bool onlyWhenDialogueIdle = true;
 
         [Header("交互显示")]
+        [Tooltip("交互 ID，默认为物体名称。可用于任务、存档或调试日志。")]
         [SerializeField] private string interactionId;
+        [Tooltip("交互目标显示名称，例如 NPC 名称。")]
         [SerializeField] private string displayName = "NPC";
+        [Tooltip("交互提示文本，例如“交谈”。")]
         [SerializeField] private string promptText = "交谈";
+        [Tooltip("交互提示类型。世界空间提示通常显示在目标上方。")]
         [SerializeField] private PromptType promptType = PromptType.WorldSpace;
+        [Tooltip("世界空间提示挂点。为空时使用 InteractionTransform。")]
         [SerializeField] private Transform promptAnchor;
 
         [Header("交互规则")]
+        [Tooltip("交互检测使用的稳定位置源。为空时使用当前物体 Transform。")]
         [SerializeField] private Transform interactionTransform;
+        [Tooltip("交互排序优先级。数值越大越容易成为焦点目标。")]
         [SerializeField] private float priority = 1f;
+        [Tooltip("长按触发阈值，单位秒。短按对话保持 0 即可。")]
         [SerializeField] private float longPressDuration;
+        [Tooltip("该目标支持的交互类型。普通对话使用 Short。")]
         [SerializeField] private InteractKind supportedKinds = InteractKind.Short;
 
         public string InteractionId => string.IsNullOrEmpty(interactionId) ? gameObject.name : interactionId;
