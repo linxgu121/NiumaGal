@@ -68,7 +68,7 @@ namespace NiumaGal.Dialogue.Arbitration
 
                 _blackboard.CurrentSentenceIndex++;
                 if (_blackboard.CurrentSentenceIndex >= _blackboard.CurrentDialogue.Sentences.Count)
-                    _scriptSM.ChangeState(new ScriptUnitEndedState(_blackboard));
+                    CloseDialogue();
                 else
                     _scriptSM.ChangeState(new ScriptRunningState(_blackboard));
 

@@ -11,6 +11,7 @@ namespace NiumaGal.Extension.Ambient
     public class AmbientDialogueDriver : MonoBehaviour
     {
         [Header("配置资产")]
+        [Tooltip("环境叙事配置资产，包含台词池、触发半径、冷却和表现模式。")]
         public AmbientAsset Asset;
 
         [Header("目标玩家")]
@@ -24,6 +25,9 @@ namespace NiumaGal.Extension.Ambient
         private float _lastTriggerTime = -999f;
         private bool _hasTriggered;
         private bool _isInRange;
+        private int _nextLineIndex;
+        private int _lastLineIndex = -1;
+        private bool _reportedMissingObstructionMask;
 
          private void Awake()
         {
@@ -49,8 +53,12 @@ namespace NiumaGal.Extension.Ambient
             // 进入范围时触发
             if (_isInRange && !wasInRange)
             {
-                if (Time.time - _lastTriggerTime >= Asset.Cooldown)
+                if (CanTrigger())
                     PlayAmbientLine();
+            }
+            else if (!_isInRange && wasInRange && Asset.CloseWhenExitRange)
+            {
+                Presenter.CloseAmbient();
             }
         }
 
@@ -61,13 +69,70 @@ namespace NiumaGal.Extension.Ambient
         {
             if (Asset.Lines.Count == 0) return;
 
-            // 随机取一句
-            var line = Asset.Lines[Random.Range(0, Asset.Lines.Count)];
+            int lineIndex = SelectLineIndex();
+            var line = Asset.Lines[lineIndex];
             
-            Presenter.PlayAmbient(line, Asset.DefaultMode, transform);
+            if (!Presenter.PlayAmbient(line, Asset.DefaultMode, transform, Asset.BubbleDuration))
+                return;
 
             _lastTriggerTime = Time.time;
             _hasTriggered = true;
+            _lastLineIndex = lineIndex;
+        }
+
+        private bool CanTrigger()
+        {
+            if (Time.time - _lastTriggerTime < Asset.Cooldown)
+                return false;
+
+            if (!Asset.RequireLineOfSight)
+                return true;
+
+            if (Asset.ObstructionMask.value == 0)
+            {
+                if (!_reportedMissingObstructionMask)
+                {
+                    _reportedMissingObstructionMask = true;
+                    Debug.LogWarning("[AmbientDialogueDriver] 已开启 RequireLineOfSight，但 ObstructionMask 未设置，视线检测不会产生遮挡效果。", this);
+                }
+
+                return true;
+            }
+
+            Vector3 from = PlayerTransform.TransformPoint(Asset.PlayerEyeOffset);
+            Vector3 to = transform.TransformPoint(Asset.SourceMouthOffset);
+            Vector3 direction = to - from;
+            float distance = direction.magnitude;
+
+            if (distance <= 0.01f)
+                return true;
+
+            return !Physics.Raycast(
+                from,
+                direction.normalized,
+                distance,
+                Asset.ObstructionMask,
+                QueryTriggerInteraction.Ignore);
+        }
+
+        private int SelectLineIndex()
+        {
+            int count = Asset.Lines.Count;
+            if (count <= 1)
+                return 0;
+
+            if (!Asset.RandomLine)
+            {
+                int index = _nextLineIndex;
+                _nextLineIndex = (_nextLineIndex + 1) % count;
+                return index;
+            }
+
+            int selected = Random.Range(0, count);
+            if (Asset.AvoidImmediateRepeat && selected == _lastLineIndex)
+                selected = (selected + 1) % count;
+
+            return selected;
         }
 
         /// <summary>
