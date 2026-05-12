@@ -1,6 +1,7 @@
 using System.Collections;
 using NiumaGal.Dialogue.Data;
 using NiumaGal.Presenter;
+using NiumaGal.Save;
 using UnityEngine;
 
 namespace NiumaGal.Extension.Ambient
@@ -13,7 +14,7 @@ namespace NiumaGal.Extension.Ambient
     public class ProximityMonologueDriver : MonoBehaviour
     {
         [Header("剧本资产")]
-        [Tooltip("近距离独白使用的 DialogueAsset。进入触发区后会按 Sentences 顺序自动播放。")]
+        [Tooltip("近距离独白使用的 DialogueAsset。进入触发区后会按 Sentences 顺序自动播放。用于一次性触发存档时会读取 DialogueId，建议使用 monologue_ 前缀，避免和 ambient_ ID 冲突。")]
         public DialogueAsset MonologueAsset;
 
         [Tooltip("可选的环境叙事配置资产。绑定后会读取其中的 MonologueLineInterval，避免策划改了 Asset 间隔但运行时不生效。")]
@@ -22,6 +23,10 @@ namespace NiumaGal.Extension.Ambient
         [Header("表现层引用")]
         [Tooltip("场景中的 DialoguePresenter。为空时会自动查找。")]
         public DialoguePresenter Presenter;
+
+        [Header("进度记录（可选）")]
+        [Tooltip("Gal 进度事实仓库。用于记录已触发的一次性近距离独白；为空时会自动查找。")]
+        public NiumaGalProgressStore ProgressStore;
 
         [Header("播放设置")]
         [Tooltip("进入触发区域后延迟多久开始播放（秒）")]
@@ -45,12 +50,15 @@ namespace NiumaGal.Extension.Ambient
         {
             if (Presenter == null)
                 Presenter = FindObjectOfType<DialoguePresenter>();
+
+            if (ProgressStore == null)
+                ProgressStore = NiumaGalProgressStore.Active ?? FindObjectOfType<NiumaGalProgressStore>();
         }
 
          private void OnTriggerEnter(Collider other)
         {
             if (_isPlaying) return;
-            if (PlayOnce && _hasPlayed) return;
+            if (PlayOnce && IsOneShotConsumed()) return;
             if (!other.CompareTag("Player")) return;
             if (MonologueAsset == null || MonologueAsset.Sentences.Count == 0) return;
             if (Presenter == null) return;
@@ -129,10 +137,50 @@ namespace NiumaGal.Extension.Ambient
             _isPlaying = false;
             _currentIndex = 0;
             if (completed)
+            {
                 _hasPlayed = true;
+                MarkMonologueTriggeredIfNeeded();
+            }
 
             if (Presenter != null)
                 Presenter.CloseAmbient();
+        }
+
+        /// <summary>
+        /// 判断一次性独白是否已经被本次运行或存档进度消费。
+        /// </summary>
+        private bool IsOneShotConsumed()
+        {
+            if (_hasPlayed)
+                return true;
+
+            var monologueId = ResolveMonologueId();
+            return !string.IsNullOrWhiteSpace(monologueId)
+                   && ProgressStore != null
+                   && ProgressStore.IsAmbientTriggered(monologueId);
+        }
+
+        /// <summary>
+        /// 独白完整播放后写入环境叙事进度事实。
+        /// </summary>
+        private void MarkMonologueTriggeredIfNeeded()
+        {
+            if (!PlayOnce)
+                return;
+
+            var monologueId = ResolveMonologueId();
+            if (string.IsNullOrWhiteSpace(monologueId))
+                return;
+
+            if (ProgressStore == null)
+                ProgressStore = NiumaGalProgressStore.Active ?? FindObjectOfType<NiumaGalProgressStore>();
+
+            ProgressStore?.MarkAmbientTriggered(monologueId);
+        }
+
+        private string ResolveMonologueId()
+        {
+            return MonologueAsset == null ? null : MonologueAsset.DialogueId;
         }
 
         private float GetLineInterval()

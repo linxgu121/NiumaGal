@@ -1,4 +1,5 @@
 using NiumaGal.Presenter;
+using NiumaGal.Save;
 using UnityEngine;
 
 namespace NiumaGal.Extension.Ambient
@@ -22,6 +23,10 @@ namespace NiumaGal.Extension.Ambient
         [Tooltip("未赋值则自动查找场景中的 DialoguePresenter")]
         public DialoguePresenter Presenter;
 
+        [Header("进度记录（可选）")]
+        [Tooltip("Gal 进度事实仓库。用于记录已触发的一次性环境叙事；为空时会自动查找。")]
+        public NiumaGalProgressStore ProgressStore;
+
         private float _lastTriggerTime = -999f;
         private bool _hasTriggered;
         private bool _isInRange;
@@ -39,12 +44,15 @@ namespace NiumaGal.Extension.Ambient
 
             if (Presenter == null)
                 Presenter = FindObjectOfType<DialoguePresenter>();
+
+            if (ProgressStore == null)
+                ProgressStore = NiumaGalProgressStore.Active ?? FindObjectOfType<NiumaGalProgressStore>();
         }
 
         private void Update()
         {
             if (Asset == null || PlayerTransform == null || Presenter == null) return;
-            if (Asset.OneShot && _hasTriggered) return;
+            if (Asset.OneShot && IsOneShotConsumed()) return;
 
             float dist = Vector3.Distance(transform.position, PlayerTransform.position);
             bool wasInRange = _isInRange;
@@ -78,6 +86,39 @@ namespace NiumaGal.Extension.Ambient
             _lastTriggerTime = Time.time;
             _hasTriggered = true;
             _lastLineIndex = lineIndex;
+            MarkAmbientTriggeredIfNeeded();
+        }
+
+        /// <summary>
+        /// 判断一次性环境叙事是否已经被本次运行或存档进度消费。
+        /// </summary>
+        private bool IsOneShotConsumed()
+        {
+            if (_hasTriggered)
+                return true;
+
+            var ambientId = ResolveAmbientId();
+            return !string.IsNullOrWhiteSpace(ambientId)
+                   && ProgressStore != null
+                   && ProgressStore.IsAmbientTriggered(ambientId);
+        }
+
+        /// <summary>
+        /// 一次性环境叙事成功播放后写入进度事实。
+        /// </summary>
+        private void MarkAmbientTriggeredIfNeeded()
+        {
+            if (!Asset.OneShot)
+                return;
+
+            var ambientId = ResolveAmbientId();
+            if (string.IsNullOrWhiteSpace(ambientId))
+                return;
+
+            if (ProgressStore == null)
+                ProgressStore = NiumaGalProgressStore.Active ?? FindObjectOfType<NiumaGalProgressStore>();
+
+            ProgressStore?.MarkAmbientTriggered(ambientId);
         }
 
         private bool CanTrigger()
@@ -133,6 +174,11 @@ namespace NiumaGal.Extension.Ambient
                 selected = (selected + 1) % count;
 
             return selected;
+        }
+
+        private string ResolveAmbientId()
+        {
+            return Asset == null ? null : Asset.AmbientId;
         }
 
         /// <summary>

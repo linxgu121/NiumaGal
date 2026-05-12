@@ -6,6 +6,7 @@ using NiumaGal.Dialogue.Input;
 using NiumaGal.Dialogue.RuntimeData;
 using NiumaGal.Enum;
 using NiumaGal.Presenter;
+using NiumaGal.Save;
 using NiumaGal.State;
 using UnityEngine;
 
@@ -29,6 +30,10 @@ namespace NiumaGal.Dialogue
         [Header("TPC 输入阻塞（可选）")]
         [Tooltip("对话中时，阻塞该输入源的输入")]
         public NiumaTPC.Character.Input.Base.InputSourceBase TPCInputSource;
+
+        [Header("进度记录（可选）")]
+        [Tooltip("Gal 进度事实仓库。用于记录已读对话 ID；为空时会自动查找场景中的 NiumaGalProgressStore。")]
+        public NiumaGalProgressStore ProgressStore;
 
         // 核心系统
         public NiumaGalBlackboard Blackboard { get; private set; }
@@ -67,6 +72,9 @@ namespace NiumaGal.Dialogue
 
             if (Presenter is DialoguePresenter concretePresenter)
                 concretePresenter.Initialize(Blackboard, Config);
+
+            if (ProgressStore == null)
+                ProgressStore = GetComponent<NiumaGalProgressStore>() ?? FindObjectOfType<NiumaGalProgressStore>();
 
             BindArbiterEvents();
             Blackboard.OnScriptStateChanged += OnScriptStateChanged;
@@ -113,9 +121,38 @@ namespace NiumaGal.Dialogue
 
         private void OnDialogueClosedInternal()
         {
+            MarkCurrentDialogueReadIfCompleted();
             Presenter?.CloseDialogue();
 
             TPCInputSource?.SetBlocked(false);
+        }
+
+        /// <summary>
+        /// 当前对话完整播完时，记录已读对话 ID。
+        /// 强制关闭或中途跳出不会标记，避免把未读完的剧情写进存档。
+        /// </summary>
+        private void MarkCurrentDialogueReadIfCompleted()
+        {
+            var dialogue = Blackboard?.CurrentDialogue;
+            if (dialogue == null || dialogue.Sentences == null)
+                return;
+
+            if (Blackboard.CurrentSentenceIndex < dialogue.Sentences.Count)
+                return;
+
+            var dialogueId = ResolveDialogueId(dialogue);
+            if (string.IsNullOrWhiteSpace(dialogueId))
+                return;
+
+            if (ProgressStore == null)
+                ProgressStore = NiumaGalProgressStore.Active ?? FindObjectOfType<NiumaGalProgressStore>();
+
+            ProgressStore?.MarkDialogueRead(dialogueId);
+        }
+
+        private static string ResolveDialogueId(DialogueAsset dialogue)
+        {
+            return dialogue == null ? null : dialogue.DialogueId;
         }
 
         /// <summary>强制关闭当前对话</summary>

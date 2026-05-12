@@ -7,6 +7,10 @@ namespace NiumaGal.Extension.Ambient
     [CreateAssetMenu(fileName = "AmbientAsset", menuName = "NiumaGal/Ambient/AmbientAsset")]
     public class AmbientAsset : ScriptableObject
     {
+        [Header("唯一标识")]
+        [Tooltip("环境叙事唯一 ID。用于存档、一次性触发和调试；正式内容必须填写，确定后不要再修改。建议使用 ambient_ 前缀，避免和 DialogueId / monologue_ ID 冲突。")]
+        public string AmbientId;
+
         [Header("台词池")]
         [Tooltip("环境台词池，随机播放其中一句；独白模式则按顺序播放全部")]
         public List<DialogueSentence> Lines = new List<DialogueSentence>();
