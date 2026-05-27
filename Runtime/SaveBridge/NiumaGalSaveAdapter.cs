@@ -49,7 +49,7 @@ namespace NiumaGal.SaveBridge
         /// Gal 进度数据版本号。
         /// NiumaSave 通过该值判断 Gal 模块是否发生变化。
         /// </summary>
-        public int Revision => progressStore != null ? progressStore.Revision : 0;
+        public long Revision => progressStore != null ? progressStore.Revision : 0L;
 
         private void Awake()
         {
