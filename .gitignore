@@ -13,3 +13,4 @@ Assets/Res/
 *.unityproj
 *.DS_Store
 *.md
+/GLOBAL_CONSTRAINTS.md.meta
