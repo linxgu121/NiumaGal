@@ -126,14 +126,48 @@ namespace NiumaGal.Dialogue.Arbitration
         /// </summary>
         public void StartDialogue(DialogueAsset asset)
         {
+            StartDialogue(asset, 0);
+        }
+
+        /// <summary>
+        /// 从指定句子开始播放对话。
+        /// 供 DialogueService 处理 StartSentenceId 和选项跳转时使用。
+        /// </summary>
+        public void StartDialogue(DialogueAsset asset, int sentenceIndex)
+        {
             if (asset == null || asset.Sentences == null || asset.Sentences.Count == 0) return;
             if (_blackboard.InteractionState != InteractionState.Idle) return;
+            if (sentenceIndex < 0 || sentenceIndex >= asset.Sentences.Count) return;
 
             _blackboard.CurrentDialogue = asset;
-            _blackboard.CurrentSentenceIndex = 0;
+            _blackboard.CurrentSentenceIndex = sentenceIndex;
 
             _interactionSM.ChangeState(new InteractionInteractingState(_blackboard));
             _scriptSM.ChangeState(new ScriptRunningState(_blackboard));
+        }
+
+        /// <summary>
+        /// 跳转到当前对话的指定句子。
+        /// 只负责状态切换，不负责条件判断和行为执行。
+        /// </summary>
+        public bool JumpToSentence(int sentenceIndex)
+        {
+            if (_blackboard.CurrentDialogue == null ||
+                _blackboard.CurrentDialogue.Sentences == null ||
+                sentenceIndex < 0 ||
+                sentenceIndex >= _blackboard.CurrentDialogue.Sentences.Count)
+            {
+                return false;
+            }
+
+            if (_blackboard.InteractionState == InteractionState.Idle)
+            {
+                return false;
+            }
+
+            _blackboard.CurrentSentenceIndex = sentenceIndex;
+            _scriptSM.ChangeState(new ScriptRunningState(_blackboard));
+            return true;
         }
 
         /// <summary>

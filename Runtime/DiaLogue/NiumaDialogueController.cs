@@ -1,9 +1,11 @@
+using System;
 using NiumaGal.Dialogue.Arbitration;
 using NiumaGal.Dialogue.Config;
 using NiumaGal.Dialogue.Data;
 using NiumaGal.Dialogue.Driver;
 using NiumaGal.Dialogue.Input;
 using NiumaGal.Dialogue.RuntimeData;
+using NiumaGal.Dialogue.Service;
 using NiumaGal.Enum;
 using NiumaGal.Presenter;
 using NiumaGal.Save;
@@ -20,6 +22,10 @@ namespace NiumaGal.Dialogue
     {
         [Header("系统配置")]
         public NiumaGalSO Config;
+
+        [Header("对话资产注册表（可选）")]
+        [Tooltip("供 DialogueService 通过 DialogueId 启动对话。为空时仍可直接传入 DialogueAsset。")]
+        public DialogueAsset[] DialogueAssets = Array.Empty<DialogueAsset>();
 
         [Header("输入源")]
         public GalInputSource InputSourceRef;
@@ -41,6 +47,8 @@ namespace NiumaGal.Dialogue
         public StateMachine InteractionSM { get; private set; }
         public StateMachine ScriptSM { get; private set; }
         public GalArbiter Arbiter { get; private set; }
+        public IDialogueService DialogueService { get; private set; }
+        public IDialogueConfigurationService DialogueConfigurationService { get; private set; }
 
         // 表现层（由场景挂载或自动查找）
         public IDialoguePresenter Presenter { get; set; }
@@ -75,6 +83,16 @@ namespace NiumaGal.Dialogue
 
             if (ProgressStore == null)
                 ProgressStore = GetComponent<NiumaGalProgressStore>() ?? FindObjectOfType<NiumaGalProgressStore>();
+
+            var dialogueService = new DialogueService(
+                Blackboard,
+                Arbiter,
+                ProgressStore,
+                DialogueAssets,
+                BootIfNeeded,
+                OnDialogueServiceStarting);
+            DialogueService = dialogueService;
+            DialogueConfigurationService = dialogueService;
 
             BindArbiterEvents();
             Blackboard.OnScriptStateChanged += OnScriptStateChanged;
@@ -111,10 +129,45 @@ namespace NiumaGal.Dialogue
         /// </summary>
         public void StartDialogue(DialogueAsset asset)
         {
+            DialogueService?.StartDialogue(new DialogueStartRequest
+            {
+                DialogueAsset = asset,
+                SourceModule = nameof(NiumaDialogueController)
+            });
+        }
+
+        /// <summary>
+        /// 通过稳定 DialogueId 启动对话。
+        /// 用于任务、剧情、MiniGame 入口等外部模块，不直接依赖 ScriptableObject 引用。
+        /// </summary>
+        public DialogueOperationResult StartDialogueById(string dialogueId, string actorId = null, string sourceModule = null)
+        {
+            return DialogueService?.StartDialogue(new DialogueStartRequest
+            {
+                DialogueId = dialogueId,
+                ActorId = actorId,
+                SourceModule = sourceModule ?? nameof(NiumaDialogueController)
+            }) ?? DialogueOperationResult.Fail(DialogueOperationFailureReason.ServiceNotReady, "DialogueService 尚未初始化。", dialogueId);
+        }
+
+        /// <summary>
+        /// 选择当前句子的对话选项。
+        /// UI 桥接层后续会调用该入口完成“进入你画我猜 / 下次再说”等分支。
+        /// </summary>
+        public DialogueOperationResult SelectChoice(string choiceId, string actorId = null, string sourceModule = null)
+        {
+            return DialogueService?.SelectChoice(new DialogueChoiceSelectRequest
+            {
+                ChoiceId = choiceId,
+                ActorId = actorId,
+                SourceModule = sourceModule ?? nameof(NiumaDialogueController)
+            }) ?? DialogueOperationResult.Fail(DialogueOperationFailureReason.ServiceNotReady, "DialogueService 尚未初始化。", null, null, choiceId);
+        }
+
+        private void OnDialogueServiceStarting(DialogueAsset asset)
+        {
             if (Presenter is DialoguePresenter dp)
                 dp.SetDialogueAsset(asset);
-
-            Arbiter.StartDialogue(asset);
 
             TPCInputSource?.SetBlocked(true);
         }
@@ -156,7 +209,14 @@ namespace NiumaGal.Dialogue
         }
 
         /// <summary>强制关闭当前对话</summary>
-        public void ForceCloseDialogue() => Arbiter.CloseDialogue();
+        public void ForceCloseDialogue()
+        {
+            DialogueService?.ForceClose(new DialogueCloseRequest
+            {
+                SourceModule = nameof(NiumaDialogueController),
+                MarkAsCompleted = false
+            });
+        }
 
         /// <summary>
         /// 处理输入请求，调用 Arbiter 进行仲裁
@@ -168,7 +228,10 @@ namespace NiumaGal.Dialogue
             // 缓存期内或本帧按下
             if (proc.AdvanceJustPressed || proc.AdvanceBufferTimer > 0)
             {
-                Arbiter.ProcessInput(new InputRequest(InputCommand.Advance));
+                DialogueService?.Advance(new DialogueAdvanceRequest
+                {
+                    SourceModule = nameof(GalInputPipeline)
+                });
                 InputPipeline.ConsumeAdvancePressed();
             }
 
