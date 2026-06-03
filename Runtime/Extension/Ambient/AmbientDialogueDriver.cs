@@ -43,10 +43,10 @@ namespace NiumaGal.Extension.Ambient
             }
 
             if (Presenter == null)
-                Presenter = FindObjectOfType<DialoguePresenter>();
+                Presenter = FindSceneObject<DialoguePresenter>();
 
             if (ProgressStore == null)
-                ProgressStore = NiumaGalProgressStore.Active ?? FindObjectOfType<NiumaGalProgressStore>();
+                ProgressStore = NiumaGalProgressStore.Active ?? FindSceneObject<NiumaGalProgressStore>();
         }
 
         private void Update()
@@ -116,7 +116,7 @@ namespace NiumaGal.Extension.Ambient
                 return;
 
             if (ProgressStore == null)
-                ProgressStore = NiumaGalProgressStore.Active ?? FindObjectOfType<NiumaGalProgressStore>();
+                ProgressStore = NiumaGalProgressStore.Active ?? FindSceneObject<NiumaGalProgressStore>();
 
             ProgressStore?.MarkAmbientTriggered(ambientId);
         }
@@ -179,6 +179,15 @@ namespace NiumaGal.Extension.Ambient
         private string ResolveAmbientId()
         {
             return Asset == null ? null : Asset.AmbientId;
+        }
+
+        private static T FindSceneObject<T>() where T : Object
+        {
+#if UNITY_2023_1_OR_NEWER
+            return FindFirstObjectByType<T>();
+#else
+            return FindObjectOfType<T>();
+#endif
         }
 
         /// <summary>

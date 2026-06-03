@@ -46,6 +46,10 @@ namespace NiumaGal.Bridge
         [Tooltip("该目标支持的交互类型。普通对话使用 Short。")]
         [SerializeField] private InteractKind supportedKinds = InteractKind.Short;
 
+        [Header("调试")]
+        [Tooltip("对话启动失败时是否输出警告，便于场景绑定排查。")]
+        [SerializeField] private bool logWarnings = true;
+
         public string InteractionId => string.IsNullOrEmpty(interactionId) ? gameObject.name : interactionId;
         public Transform InteractionTransform => interactionTransform != null ? interactionTransform : transform;
         public string DisplayName => displayName;
@@ -93,7 +97,13 @@ namespace NiumaGal.Bridge
             if (!CanInteract(request.Context))
                 return;
 
-            dialogueController.StartDialogue(dialogueAsset);
+            var result = dialogueController.StartDialogueWithResult(dialogueAsset);
+            if ((result == null || !result.Succeeded) && logWarnings)
+            {
+                var reason = result == null ? DialogueOperationFailureReason.Unknown : result.FailureReason;
+                var message = result == null ? "StartDialogue 返回空结果。" : result.Message;
+                Debug.LogWarning($"[NiumaDialogueInteractable] 对话启动失败：{reason} {message}", this);
+            }
         }
 
         private void ResolveDialogueController()
@@ -101,7 +111,16 @@ namespace NiumaGal.Bridge
             if (dialogueController != null || !autoFindDialogueController)
                 return;
 
-            dialogueController = FindObjectOfType<NiumaDialogueController>();
+            dialogueController = FindSceneObject<NiumaDialogueController>();
+        }
+
+        private static T FindSceneObject<T>() where T : Object
+        {
+#if UNITY_2023_1_OR_NEWER
+            return FindFirstObjectByType<T>();
+#else
+            return FindObjectOfType<T>();
+#endif
         }
 
         private void OnValidate()

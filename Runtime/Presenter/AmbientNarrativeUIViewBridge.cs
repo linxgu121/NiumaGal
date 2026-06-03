@@ -77,12 +77,14 @@ namespace NiumaGal.Presenter
 
         private void OnDisable()
         {
-            if (presenter == null)
-                return;
+            if (presenter != null)
+            {
+                presenter.OnAmbientLineStarted -= HandleAmbientLineUpdated;
+                presenter.OnAmbientLineUpdated -= HandleAmbientLineUpdated;
+                presenter.OnAmbientClosed -= HandleAmbientClosed;
+            }
 
-            presenter.OnAmbientLineStarted -= HandleAmbientLineUpdated;
-            presenter.OnAmbientLineUpdated -= HandleAmbientLineUpdated;
-            presenter.OnAmbientClosed -= HandleAmbientClosed;
+            HideAll();
         }
 
         private void LateUpdate()
@@ -111,7 +113,7 @@ namespace NiumaGal.Presenter
         private void ResolveReferences()
         {
             if (presenter == null)
-                presenter = GetComponent<DialoguePresenter>() ?? FindObjectOfType<DialoguePresenter>();
+                presenter = GetComponent<DialoguePresenter>() ?? FindSceneObject<DialoguePresenter>();
 
             if (worldCamera == null)
                 TryResolveWorldCamera(true);
@@ -209,6 +211,15 @@ namespace NiumaGal.Presenter
         {
             if (target != null)
                 target.text = value ?? string.Empty;
+        }
+
+        private static T FindSceneObject<T>() where T : Object
+        {
+#if UNITY_2023_1_OR_NEWER
+            return FindFirstObjectByType<T>();
+#else
+            return FindObjectOfType<T>();
+#endif
         }
     }
 }

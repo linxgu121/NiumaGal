@@ -49,10 +49,10 @@ namespace NiumaGal.Extension.Ambient
         private void Awake()
         {
             if (Presenter == null)
-                Presenter = FindObjectOfType<DialoguePresenter>();
+                Presenter = FindSceneObject<DialoguePresenter>();
 
             if (ProgressStore == null)
-                ProgressStore = NiumaGalProgressStore.Active ?? FindObjectOfType<NiumaGalProgressStore>();
+                ProgressStore = NiumaGalProgressStore.Active ?? FindSceneObject<NiumaGalProgressStore>();
         }
 
          private void OnTriggerEnter(Collider other)
@@ -136,6 +136,7 @@ namespace NiumaGal.Extension.Ambient
         {
             _isPlaying = false;
             _currentIndex = 0;
+            _playCoroutine = null;
             if (completed)
             {
                 _hasPlayed = true;
@@ -173,7 +174,7 @@ namespace NiumaGal.Extension.Ambient
                 return;
 
             if (ProgressStore == null)
-                ProgressStore = NiumaGalProgressStore.Active ?? FindObjectOfType<NiumaGalProgressStore>();
+                ProgressStore = NiumaGalProgressStore.Active ?? FindSceneObject<NiumaGalProgressStore>();
 
             ProgressStore?.MarkAmbientTriggered(monologueId);
         }
@@ -191,13 +192,41 @@ namespace NiumaGal.Extension.Ambient
             return Mathf.Max(0f, LineInterval);
         }
 
+        private void StopRunningMonologue()
+        {
+            if (_playCoroutine != null)
+            {
+                StopCoroutine(_playCoroutine);
+                _playCoroutine = null;
+            }
+
+            if (_isPlaying)
+                EndMonologue(false);
+        }
+
+        private static T FindSceneObject<T>() where T : Object
+        {
+#if UNITY_2023_1_OR_NEWER
+            return FindFirstObjectByType<T>();
+#else
+            return FindObjectOfType<T>();
+#endif
+        }
+
         /// <summary>
-        /// 确保在对象销毁时停止协程，避免潜在的错误
+        /// 组件禁用时中断独白，避免 UI 字幕或气泡残留在场景中。
+        /// </summary>
+        private void OnDisable()
+        {
+            StopRunningMonologue();
+        }
+
+        /// <summary>
+        /// 确保在对象销毁时停止协程，避免潜在的错误。
         /// </summary>
         private void OnDestroy()
         {
-            if (_playCoroutine != null)
-                StopCoroutine(_playCoroutine);
+            StopRunningMonologue();
         }
 
     }

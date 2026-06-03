@@ -149,11 +149,19 @@ namespace NiumaGal.Dialogue
         /// </summary>
         public void StartDialogue(DialogueAsset asset)
         {
-            DialogueService?.StartDialogue(new DialogueStartRequest
+            StartDialogueWithResult(asset);
+        }
+
+        /// <summary>
+        /// 启动对话并返回结构化结果。交互、剧情或调试工具需要失败原因时使用该入口。
+        /// </summary>
+        public DialogueOperationResult StartDialogueWithResult(DialogueAsset asset)
+        {
+            return DialogueService?.StartDialogue(new DialogueStartRequest
             {
                 DialogueAsset = asset,
                 SourceModule = nameof(NiumaDialogueController)
-            });
+            }) ?? DialogueOperationResult.Fail(DialogueOperationFailureReason.ServiceNotReady, "DialogueService 尚未初始化。");
         }
 
         /// <summary>

@@ -131,6 +131,13 @@ namespace NiumaGal.SaveBridge
                     $"Gal 存档段版本不支持：{section.SectionVersion}");
             }
 
+            if (!string.Equals(section.Format, GalSectionFormat, StringComparison.Ordinal))
+            {
+                return SaveSectionImportResult.Fail(
+                    SaveSectionImportErrorCode.DataCorrupted,
+                    $"Gal 存档段格式不支持：{section.Format}");
+            }
+
             if (!string.Equals(section.DataEncoding, SaveDataEncoding.Base64, StringComparison.Ordinal))
             {
                 return SaveSectionImportResult.Fail(
@@ -148,6 +155,13 @@ namespace NiumaGal.SaveBridge
                 var bytes = Convert.FromBase64String(section.EncodedData);
                 var json = Encoding.UTF8.GetString(bytes);
                 var saveData = JsonUtility.FromJson<GalSaveData>(json);
+                if (saveData == null)
+                {
+                    return SaveSectionImportResult.Fail(
+                        SaveSectionImportErrorCode.DataCorrupted,
+                        "Gal 存档段解析结果为空。");
+                }
+
                 progressStore.ImportSaveData(saveData);
                 return SaveSectionImportResult.Success();
             }
@@ -202,16 +216,12 @@ namespace NiumaGal.SaveBridge
 
             if (progressStore == null)
             {
-                progressStore = NiumaGalProgressStore.Active ?? FindObjectOfType<NiumaGalProgressStore>();
+                progressStore = NiumaGalProgressStore.Active ?? FindSceneObject<NiumaGalProgressStore>();
             }
 
             if (saveController == null)
             {
-#if UNITY_2023_1_OR_NEWER
-                saveController = FindFirstObjectByType<NiumaSaveController>();
-#else
-                saveController = FindObjectOfType<NiumaSaveController>();
-#endif
+                saveController = FindSceneObject<NiumaSaveController>();
             }
 
             if (logMissing && progressStore == null)
@@ -223,6 +233,15 @@ namespace NiumaGal.SaveBridge
             {
                 UnityEngine.Debug.LogWarning("[NiumaGalSaveAdapter] 未找到 NiumaSaveController，请在 Inspector 中绑定。", this);
             }
+        }
+
+        private static T FindSceneObject<T>() where T : UnityEngine.Object
+        {
+#if UNITY_2023_1_OR_NEWER
+            return FindFirstObjectByType<T>();
+#else
+            return FindObjectOfType<T>();
+#endif
         }
     }
 }
