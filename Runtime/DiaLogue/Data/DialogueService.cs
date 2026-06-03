@@ -281,6 +281,7 @@ namespace NiumaGal.Dialogue.Service
         public DialogueViewData BuildViewData()
         {
             var sentence = CurrentSentence;
+            var choices = BuildChoiceViewData(sentence);
             return new DialogueViewData
             {
                 Revision = Revision,
@@ -291,8 +292,8 @@ namespace NiumaGal.Dialogue.Service
                 FullText = sentence?.Text ?? string.Empty,
                 DisplayText = _blackboard?.CurrentText ?? sentence?.Text ?? string.Empty,
                 ShowContinueHint = IsDialoguePlaying && _blackboard.ScriptState == DialogueScriptState.BetweenSentences,
-                IsWaitingChoice = BuildChoiceViewData(sentence).Length > 0,
-                Choices = BuildChoiceViewData(sentence)
+                IsWaitingChoice = choices.Length > 0,
+                Choices = choices
             };
         }
 

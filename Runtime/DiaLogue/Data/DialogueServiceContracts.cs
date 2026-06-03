@@ -1,4 +1,5 @@
 using NiumaGal.Dialogue.Data;
+using NiumaGal.Save;
 
 namespace NiumaGal.Dialogue.Service
 {
@@ -44,6 +45,7 @@ namespace NiumaGal.Dialogue.Service
         void SetDialogueAssets(DialogueAsset[] dialogueAssets);
         void SetConditionResolver(IDialogueConditionResolver resolver);
         void SetActionHandler(IDialogueActionHandler handler);
+        void SetProgressStore(NiumaGalProgressStore progressStore);
     }
 
     /// <summary>

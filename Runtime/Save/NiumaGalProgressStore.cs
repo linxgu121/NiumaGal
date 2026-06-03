@@ -13,7 +13,7 @@ namespace NiumaGal.Save
     {
         private readonly HashSet<string> _readDialogueIds = new HashSet<string>(StringComparer.Ordinal);
         private readonly HashSet<string> _triggeredAmbientIds = new HashSet<string>(StringComparer.Ordinal);
-        private int _revision;
+        private long _revision;
 
         /// <summary>
         /// 当前场景中的默认进度仓库。
@@ -25,7 +25,7 @@ namespace NiumaGal.Save
         /// Gal 进度修订号。
         /// NiumaSave 通过该值判断是否需要标记存档脏状态。
         /// </summary>
-        public int Revision => _revision;
+        public long Revision => _revision;
 
         private void OnEnable()
         {
@@ -132,7 +132,7 @@ namespace NiumaGal.Save
 
         private void BumpRevision()
         {
-            _revision = _revision == int.MaxValue ? 1 : _revision + 1;
+            _revision = _revision == long.MaxValue ? long.MaxValue : _revision + 1;
         }
 
         private static void AddRange(HashSet<string> target, string[] values)
