@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using NiumaGal.Dialogue;
 using NiumaGal.Dialogue.Data;
 using NiumaGal.Enum;
@@ -44,6 +45,7 @@ namespace NiumaGal.Presenter
         private bool _dirty;
         private float _waitForViewTimer;
         private bool _reportedMissingView;
+        private bool _reportedApplyFailure;
         private long _observedDialogueRevision = -1;
 
         private void Awake()
@@ -67,17 +69,20 @@ namespace NiumaGal.Presenter
             presenter.OnCloseUI += HandleCloseUI;
             presenter.OnHideUI += HandleHideUI;
             _observedDialogueRevision = -1;
+            TryResumeActiveDialogueView();
         }
 
         private void OnDisable()
         {
-            if (presenter == null)
-                return;
+            if (presenter != null)
+            {
+                presenter.OnRefreshUI -= HandleRefreshUI;
+                presenter.OnSentenceTextCompleted -= HandleSentenceTextCompleted;
+                presenter.OnCloseUI -= HandleCloseUI;
+                presenter.OnHideUI -= HandleHideUI;
+            }
 
-            presenter.OnRefreshUI -= HandleRefreshUI;
-            presenter.OnSentenceTextCompleted -= HandleSentenceTextCompleted;
-            presenter.OnCloseUI -= HandleCloseUI;
-            presenter.OnHideUI -= HandleHideUI;
+            ResetRuntimeState();
         }
 
         private void Update()
@@ -111,10 +116,10 @@ namespace NiumaGal.Presenter
                 presenter = GetComponent<DialoguePresenter>();
 
             if (dialogueController == null)
-                dialogueController = GetComponent<NiumaDialogueController>() ?? FindObjectOfType<NiumaDialogueController>();
+                dialogueController = GetComponent<NiumaDialogueController>() ?? FindSceneObject<NiumaDialogueController>();
 
             if (uiManager == null)
-                uiManager = FindObjectOfType<UIManager>();
+                uiManager = FindSceneObject<UIManager>();
         }
 
         private void HandleRefreshUI(string speaker, string text)
@@ -128,6 +133,7 @@ namespace NiumaGal.Presenter
             _dirty = true;
             _waitForViewTimer = 0f;
             _reportedMissingView = false;
+            _reportedApplyFailure = false;
             _observedDialogueRevision = -1;
 
             if (uiManager == null)
@@ -158,19 +164,18 @@ namespace NiumaGal.Presenter
 
         private void HandleCloseUI()
         {
-            _isShowing = false;
-            _dirty = false;
-            _waitForViewTimer = 0f;
-            _choices = Array.Empty<DialogueChoiceOptionData>();
-            _observedDialogueRevision = -1;
-
             if (uiManager == null)
+            {
+                ResetRuntimeState();
                 return;
+            }
 
             uiManager.CloseViewById(dialogueViewId);
 
             if (returnToGameplayOnClose)
                 uiManager.RequestMode(UIMode.Gameplay);
+
+            ResetRuntimeState();
         }
 
         private void HandleHideUI()
@@ -190,9 +195,18 @@ namespace NiumaGal.Presenter
             if (_observedDialogueRevision == revision)
                 return;
 
-            var viewData = dialogueController.DialogueService.BuildViewData();
-            _observedDialogueRevision = revision;
-            ApplyDialogueViewData(viewData);
+            try
+            {
+                var viewData = dialogueController.DialogueService.BuildViewData();
+                ApplyDialogueViewData(viewData);
+                _observedDialogueRevision = revision;
+            }
+            catch (Exception exception)
+            {
+                _observedDialogueRevision = -1;
+                if (logWarnings)
+                    Debug.LogWarning($"[NiumaUIDialogueViewBridge] 构建对话 ViewData 失败，下一帧会重试：{exception.Message}", this);
+            }
         }
 
         private void ApplyDialogueViewData(DialogueViewData viewData)
@@ -216,25 +230,35 @@ namespace NiumaGal.Presenter
             if (choices == null || choices.Length == 0)
                 return Array.Empty<DialogueChoiceOptionData>();
 
-            var result = new DialogueChoiceOptionData[choices.Length];
+            var result = new List<DialogueChoiceOptionData>(choices.Length);
             for (var i = 0; i < choices.Length; i++)
             {
                 var choice = choices[i];
-                result[i] = new DialogueChoiceOptionData
+                if (choice == null || string.IsNullOrWhiteSpace(choice.ChoiceId))
+                    continue;
+
+                result.Add(new DialogueChoiceOptionData
                 {
-                    ChoiceId = choice?.ChoiceId,
-                    DisplayText = choice?.DisplayText,
-                    IsAvailable = choice != null && choice.IsAvailable,
-                    DisabledText = choice?.DisabledText,
+                    ChoiceId = choice.ChoiceId,
+                    DisplayText = choice.DisplayText,
+                    IsAvailable = choice.IsAvailable,
+                    DisabledText = choice.DisabledText,
                     OnSelected = HandleChoiceSelected
-                };
+                });
             }
 
-            return result;
+            return result.Count > 0 ? result.ToArray() : Array.Empty<DialogueChoiceOptionData>();
         }
 
         private void HandleChoiceSelected(string choiceId)
         {
+            if (string.IsNullOrWhiteSpace(choiceId))
+            {
+                if (logWarnings)
+                    Debug.LogWarning("[NiumaUIDialogueViewBridge] 选项 ChoiceId 为空，已忽略。", this);
+                return;
+            }
+
             if (dialogueController == null)
                 ResolveReferences();
 
@@ -264,6 +288,44 @@ namespace NiumaGal.Presenter
             _dirty = true;
         }
 
+        private void TryResumeActiveDialogueView()
+        {
+            if (dialogueController?.DialogueService == null || !dialogueController.DialogueService.IsDialoguePlaying)
+                return;
+
+            _isShowing = true;
+            _dirty = true;
+            _waitForViewTimer = 0f;
+            _reportedMissingView = false;
+            _reportedApplyFailure = false;
+
+            if (uiManager == null)
+                ResolveReferences();
+
+            if (uiManager == null)
+                return;
+
+            if (switchUIMode)
+                uiManager.RequestMode(UIMode.Dialogue);
+
+            uiManager.PushView(dialogueViewId);
+        }
+
+        private void ResetRuntimeState()
+        {
+            _speaker = string.Empty;
+            _fullText = string.Empty;
+            _displayText = string.Empty;
+            _showContinueHint = false;
+            _choices = Array.Empty<DialogueChoiceOptionData>();
+            _isShowing = false;
+            _dirty = false;
+            _waitForViewTimer = 0f;
+            _reportedMissingView = false;
+            _reportedApplyFailure = false;
+            _observedDialogueRevision = -1;
+        }
+
         private void TryApplyLine()
         {
             if (!_dirty || uiManager == null)
@@ -280,10 +342,31 @@ namespace NiumaGal.Presenter
                 return;
             }
 
-            view.SetLine(_speaker, _displayText, _showContinueHint);
-            view.SetChoices(_choices);
-            _dirty = false;
-            _waitForViewTimer = 0f;
+            try
+            {
+                view.SetLine(_speaker, _displayText, _showContinueHint);
+                view.SetChoices(_choices);
+                _dirty = false;
+                _waitForViewTimer = 0f;
+                _reportedApplyFailure = false;
+            }
+            catch (Exception exception)
+            {
+                if (logWarnings && !_reportedApplyFailure)
+                {
+                    _reportedApplyFailure = true;
+                    Debug.LogWarning($"[NiumaUIDialogueViewBridge] 应用对话 UI 数据失败，后续会继续重试：{exception.Message}", this);
+                }
+            }
+        }
+
+        private static T FindSceneObject<T>() where T : UnityEngine.Object
+        {
+#if UNITY_2023_1_OR_NEWER
+            return FindFirstObjectByType<T>();
+#else
+            return FindObjectOfType<T>();
+#endif
         }
     }
 }

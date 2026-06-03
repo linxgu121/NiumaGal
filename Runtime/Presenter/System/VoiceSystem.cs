@@ -30,7 +30,8 @@ namespace NiumaGal.Presenter
         {
             if (_audioSource == null || clip == null)
             {
-                _blackboard.SetVoiceState(VoiceState.Idle);
+                // 无语音也视为本句语音完成，方便 Auto / 完成事件按统一规则推进。
+                _blackboard.SetVoiceState(VoiceState.Completed);
                 return;
             }
 
@@ -45,10 +46,6 @@ namespace NiumaGal.Presenter
 
             // 播放语音，支持配置的预延迟
              if (_config != null && _config.VoicePreDelay > 0f)
-                _audioSource.PlayDelayed(_config.VoicePreDelay);
-            else
-                _audioSource.Play();
-            if (_config != null && _config.VoicePreDelay > 0f)
                 _audioSource.PlayDelayed(_config.VoicePreDelay);
             else
                 _audioSource.Play();

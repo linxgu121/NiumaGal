@@ -44,6 +44,14 @@ namespace NiumaGal.Presenter
             _fullText = text ?? string.Empty;
             _currentLength = 0;
             _timer = 0f;
+
+            // 空文本句常用于占位、分支或纯选项节点，必须立刻完成，避免状态机停在 Playing。
+            if (string.IsNullOrEmpty(_fullText))
+            {
+                _blackboard.SetLineState(LineState.Completed);
+                return;
+            }
+
             _blackboard.SetLineState(LineState.Playing);
         }
 
@@ -55,7 +63,11 @@ namespace NiumaGal.Presenter
             // 仅在正在逐字显示且有文本时更新
             if (_blackboard.LineState != LineState.Playing) return;
             // 当文本为空时直接完成
-            if (string.IsNullOrEmpty(_fullText)) return;
+            if (string.IsNullOrEmpty(_fullText))
+            {
+                _blackboard.SetLineState(LineState.Completed);
+                return;
+            }
 
             // 获取配置的打字机间隔，默认为 0.05 秒
             float interval = _config?.TypewriterInterval ?? 0.05f;

@@ -69,14 +69,15 @@ namespace NiumaGal.Presenter
 
         public void Initialize(NiumaGalBlackboard blackboard, NiumaGalSO config)
         {
+            UnbindBlackboardEvents();
+
             _blackboard = blackboard;
             _config = config;
 
             _typewriter = new TypewriterSystem(blackboard, config?.Core);
             _voice = new VoiceSystem(blackboard, config?.Audio, VoiceAudioSource);
 
-            _blackboard.OnLineStateChanged += OnLineStateChanged;
-            _blackboard.OnVoiceStateChanged += OnVoiceStateChanged;
+            BindBlackboardEvents();
         }
 
          private void Update()
@@ -92,11 +93,7 @@ namespace NiumaGal.Presenter
 
         private void OnDestroy()
         {
-            if (_blackboard != null)
-            {
-                _blackboard.OnLineStateChanged -= OnLineStateChanged;
-                _blackboard.OnVoiceStateChanged -= OnVoiceStateChanged;
-            }
+            UnbindBlackboardEvents();
         }
 
         #region IDialoguePresenter 实现
@@ -107,10 +104,29 @@ namespace NiumaGal.Presenter
 
             var sentence = _currentAsset.Sentences[sentenceIndex];
 
-            _typewriter?.Start(sentence.Text);
+            // 先设置语音状态，再启动打字机；空文本句会立刻完成，需避免早于语音状态触发“完全完成”。
             _voice?.Play(sentence.VoiceClip);
+            _typewriter?.Start(sentence.Text);
 
             OnRefreshUI?.Invoke(sentence.Speaker, sentence.Text);
+        }
+
+        private void BindBlackboardEvents()
+        {
+            if (_blackboard == null)
+                return;
+
+            _blackboard.OnLineStateChanged += OnLineStateChanged;
+            _blackboard.OnVoiceStateChanged += OnVoiceStateChanged;
+        }
+
+        private void UnbindBlackboardEvents()
+        {
+            if (_blackboard == null)
+                return;
+
+            _blackboard.OnLineStateChanged -= OnLineStateChanged;
+            _blackboard.OnVoiceStateChanged -= OnVoiceStateChanged;
         }
 
         public void SkipTypewriter()
@@ -378,8 +394,13 @@ namespace NiumaGal.Presenter
 
         private void OnLineStateChanged(LineState state)
         {
-            if (state == LineState.Completed)
-                OnSentenceTextCompleted?.Invoke();
+            if (state != LineState.Completed)
+                return;
+
+            OnSentenceTextCompleted?.Invoke();
+
+            if (_blackboard == null || _blackboard.VoiceState != VoiceState.Playing)
+                OnSentenceFullyCompleted?.Invoke();
         }
 
         private void OnVoiceStateChanged(VoiceState state)
