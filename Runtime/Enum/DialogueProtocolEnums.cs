@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace NiumaGal.Enum
 {
     /// <summary>
@@ -25,9 +27,16 @@ namespace NiumaGal.Enum
     /// </summary>
     public enum DialogueChoiceBehavior
     {
+        [InspectorName("顺序继续：播放下一句")]
         Continue = 0,
+
+        [InspectorName("跳转句子：跳到 NextSentenceId")]
         JumpToSentence = 1,
+
+        [InspectorName("结束对话：点击后关闭")]
         EndDialogue = 2,
+
+        [InspectorName("自定义行为：执行 Actions，可选再跳句子")]
         Custom = 99
     }
 
@@ -36,15 +45,34 @@ namespace NiumaGal.Enum
     /// </summary>
     public enum DialogueConditionType
     {
+        [InspectorName("无条件")]
         None = 0,
+
+        [InspectorName("对话已读：TargetId=DialogueId")]
         DialogueRead = 1,
+
+        [InspectorName("对话未读：TargetId=DialogueId")]
         DialogueUnread = 2,
+
+        [InspectorName("任务状态：TargetId=QuestId")]
         QuestState = 3,
+
+        [InspectorName("任务目标完成：TargetId=ObjectiveId")]
         QuestObjectiveCompleted = 4,
+
+        [InspectorName("剧情标记：TargetId=FlagId")]
         StoryFlag = 5,
+
+        [InspectorName("拥有物品：TargetId=ItemId，IntValue=数量")]
         HasItem = 6,
+
+        [InspectorName("技艺等级：TargetId=SkillId，IntValue=等级")]
         GrowthLevel = 7,
+
+        [InspectorName("小游戏已解锁：TargetId=MiniGameId")]
         MiniGameUnlocked = 8,
+
+        [InspectorName("自定义条件：交给 Resolver")]
         Custom = 99
     }
 
@@ -53,17 +81,40 @@ namespace NiumaGal.Enum
     /// </summary>
     public enum DialogueActionType
     {
+        [InspectorName("无行为")]
         None = 0,
+
+        [InspectorName("启动对话：TargetId=DialogueId")]
         StartDialogue = 1,
+
+        [InspectorName("结束对话")]
         EndDialogue = 2,
+
+        [InspectorName("打开小游戏：TargetId=入口或模式 ID")]
         OpenMiniGame = 3,
+
+        [InspectorName("接取任务：TargetId=QuestId")]
         AcceptQuest = 4,
+
+        [InspectorName("推送任务信号：TargetId=SignalId")]
         PushQuestSignal = 5,
+
+        [InspectorName("开始剧情：TargetId=StoryId")]
         StartStory = 6,
+
+        [InspectorName("设置剧情标记：TargetId=FlagId")]
         SetStoryFlag = 7,
+
+        [InspectorName("加载场景：TargetId=SceneName")]
         LoadScene = 8,
+
+        [InspectorName("请求检查点存档")]
         RequestCheckpointSave = 9,
+
+        [InspectorName("播放音频：TargetId=CueId")]
         PlayAudioCue = 10,
+
+        [InspectorName("自定义行为：交给 ActionHandler")]
         Custom = 99
     }
 

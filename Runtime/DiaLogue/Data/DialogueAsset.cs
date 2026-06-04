@@ -27,6 +27,7 @@ namespace NiumaGal.Dialogue.Data
         public DialogueActionData[] ExitActions = Array.Empty<DialogueActionData>();
 
         [Tooltip("该句播放完成后显示的选项。为空时按线性对话继续推进。")]
+        [Header("选项配置：文字播放完后显示；每个选项必须填写 ChoiceId")]
         public DialogueChoiceData[] Choices = Array.Empty<DialogueChoiceData>();
     }
 

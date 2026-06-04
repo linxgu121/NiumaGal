@@ -1,5 +1,6 @@
 using System;
 using NiumaGal.Enum;
+using UnityEngine;
 
 namespace NiumaGal.Dialogue.Data
 {
@@ -44,14 +45,31 @@ namespace NiumaGal.Dialogue.Data
     [Serializable]
     public sealed class DialogueConditionData
     {
+        [Tooltip("条件稳定 ID。用于调试和日志定位，可填 has_item_key / quest_done 等；为空不影响运行。")]
         public string ConditionId;
+
+        [Tooltip("条件类型。None 表示不判断；Quest / Story / Inventory / MiniGame 等条件需要外部 ConditionResolver 处理。")]
         public DialogueConditionType Type = DialogueConditionType.None;
+
+        [Tooltip("条件目标 ID。例：DialogueRead 填 DialogueId；QuestState 填 QuestId；HasItem 填 ItemId；StoryFlag 填 FlagId。")]
         public string TargetId;
+
+        [Tooltip("比较符。常用：==、!=、>=、<=、>、<。第一版由外部 Resolver 解释，不同条件可约定不同写法。")]
         public string Operator;
+
+        [Tooltip("字符串参数。例：QuestState 可填 Completed；StoryFlag 可填 Flag 名或状态值；Custom 条件可自定义。")]
         public string StringValue;
+
+        [Tooltip("整数参数。例：HasItem 的数量、GrowthLevel 的等级、任务目标计数等。")]
         public int IntValue;
+
+        [Tooltip("浮点参数。需要小数阈值时使用，例如好感度、距离、概率等。")]
         public float FloatValue;
+
+        [Tooltip("布尔参数。适合开关类条件，例如某个 Flag 是否为 true。")]
         public bool BoolValue;
+
+        [Tooltip("扩展参数。用于少量跨模块补充字段；Key 建议小写下划线，例如 required_stage。")]
         public DialogueCustomDataEntry[] CustomData = Array.Empty<DialogueCustomDataEntry>();
 
         public DialogueConditionData Clone()
@@ -93,13 +111,28 @@ namespace NiumaGal.Dialogue.Data
     [Serializable]
     public sealed class DialogueActionData
     {
+        [Tooltip("行为稳定 ID。用于日志定位和防重复执行，可填 open_minigame / accept_quest 等；为空不影响运行。")]
         public string ActionId;
+
+        [Tooltip("行为类型。Gal 只负责发出请求，具体执行由 NiumaDialogueController.Action Handler Provider 绑定的处理器负责。")]
         public DialogueActionType Type = DialogueActionType.None;
+
+        [Tooltip("行为目标 ID。例：OpenMiniGame 填小游戏入口 ID；AcceptQuest 填 QuestId；LoadScene 填场景名；PlayAudioCue 填音频 CueId。")]
         public string TargetId;
+
+        [Tooltip("字符串参数。例：LoadScene 的 SpawnPointId、SetStoryFlag 的 FlagValue、Custom 行为的自定义文本。")]
         public string StringValue;
+
+        [Tooltip("整数参数。例：奖励数量、任务信号计数、小游戏模式索引等。")]
         public int IntValue;
+
+        [Tooltip("浮点参数。例：淡入时间、音量、延迟秒数等。")]
         public float FloatValue;
+
+        [Tooltip("布尔参数。例：是否立即切场景、是否保存检查点、是否强制执行等。")]
         public bool BoolValue;
+
+        [Tooltip("扩展参数。用于少量跨模块补充字段；复杂业务不要塞进 Gal，交给外部 Handler 自己解释。")]
         public DialogueCustomDataEntry[] CustomData = Array.Empty<DialogueCustomDataEntry>();
 
         public DialogueActionData Clone()
@@ -140,13 +173,28 @@ namespace NiumaGal.Dialogue.Data
     [Serializable]
     public sealed class DialogueChoiceData
     {
+        [Tooltip("选项稳定 ID，必填。UI 点击和 DialogueService 选择都依赖它。建议用英文小写下划线，例如 enter_minigame / refuse_help。")]
         public string ChoiceId;
+
+        [Tooltip("按钮显示文本。例：进入你画我猜 / 下次再说。为空时按钮会显示空文本，不建议留空。")]
         public string DisplayText;
+
+        [Tooltip("玩家点击该选项后的基础行为：Continue=顺序下一句；JumpToSentence=跳到指定句子；EndDialogue=结束对话；Custom=先执行 Actions，可选再跳句子。")]
         public DialogueChoiceBehavior Behavior = DialogueChoiceBehavior.Continue;
+
+        [Tooltip("目标句子 ID。Behavior=JumpToSentence 时必填；Behavior=Custom 时可选，表示执行 Actions 后继续跳到该句；Continue/EndDialogue 通常留空。")]
         public string NextSentenceId;
+
+        [Tooltip("条件不满足时是否直接隐藏该选项。开启后玩家看不到；关闭后按钮仍显示但不可点击，并可显示 DisabledText。")]
         public bool HideWhenUnavailable;
+
+        [Tooltip("条件不满足且未隐藏时显示的按钮文本。例：需要完成前置任务 / 需要 3 个草药。为空时沿用 DisplayText。")]
         public string DisabledText;
+
+        [Tooltip("显示或可点击该选项需要满足的条件。全部满足才可用；为空表示无条件。具体判断由 ConditionResolver 执行。")]
         public DialogueConditionData[] Conditions = Array.Empty<DialogueConditionData>();
+
+        [Tooltip("点击该选项时要执行的行为。例：进入小游戏、接取任务、切场景、设置剧情 Flag。Behavior=Custom 时最常用。")]
         public DialogueActionData[] Actions = Array.Empty<DialogueActionData>();
 
         public DialogueChoiceData Clone()

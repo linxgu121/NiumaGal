@@ -67,6 +67,7 @@ namespace NiumaGal.Presenter
         private IDialogueService _dialogueService;
         private long _observedDialogueRevision = -1;
         private int _forceViewDataRefreshFrames;
+        private int _pendingViewResolveFrames;
         private bool _isShowing;
         private bool _dirty;
         private string _speakerName;
@@ -141,6 +142,8 @@ namespace NiumaGal.Presenter
 
         private void LateUpdate()
         {
+            ResolvePendingDialogueView();
+
             if (_forceViewDataRefreshFrames > 0)
             {
                 _forceViewDataRefreshFrames--;
@@ -218,13 +221,15 @@ namespace NiumaGal.Presenter
 
             ApplyDialogueVisualSuppression();
             uiManager.PushView(dialogueViewId);
+            _isShowing = true;
+            _pendingViewResolveFrames = 4;
             TryResumeActiveDialogueView();
-            if (_view == null && logWarnings)
+            if (_view == null && logWarnings && _pendingViewResolveFrames < 0)
             {
                 Debug.LogWarning($"[NiumaUIDialogueViewBridge] ViewId={dialogueViewId} 没有注册 DialogueWindowView。", this);
             }
 
-            _isShowing = _view != null;
+            _isShowing = true;
             UpdateCursorState();
         }
 
@@ -495,6 +500,28 @@ namespace NiumaGal.Presenter
             }
         }
 
+        private void ResolvePendingDialogueView()
+        {
+            if (!_isShowing || _view != null || _pendingViewResolveFrames <= 0)
+            {
+                return;
+            }
+
+            _pendingViewResolveFrames--;
+            TryResumeActiveDialogueView();
+
+            if (_view != null)
+            {
+                _dirty = true;
+                return;
+            }
+
+            if (_pendingViewResolveFrames == 0 && logWarnings)
+            {
+                Debug.LogWarning($"[NiumaUIDialogueViewBridge] ViewId={dialogueViewId} 没有拿到 DialogueWindowView。请检查 UIManager 的 ViewFactory 是否注册了 DialogueWindowBinding，或 Binding 的 ViewId 是否等于 DialogueWindow。", this);
+            }
+        }
+
         private void ResetRuntimeState()
         {
             _view = null;
@@ -507,6 +534,7 @@ namespace NiumaGal.Presenter
             _choices = Array.Empty<DialogueChoiceOptionData>();
             _observedDialogueRevision = -1;
             _forceViewDataRefreshFrames = 0;
+            _pendingViewResolveFrames = 0;
         }
 
         private void UpdateCursorState()
