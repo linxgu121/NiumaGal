@@ -42,13 +42,13 @@ namespace NiumaGal.Dialogue
         public NiumaGalProgressStore ProgressStore;
 
         [Header("外部条件与行为处理器（可选）")]
-        [Tooltip("实现 IDialogueConditionResolver 的组件。用于把任务、剧情、背包等条件交给外部模块判断。")]
+        [Tooltip("条件解析脚本。需要任务/剧情/背包条件时，拖对应模块提供的 Dialogue 条件桥接脚本；当前没有条件桥接脚本时可留空。")]
         [SerializeField] private MonoBehaviour conditionResolverProvider;
 
-        [Tooltip("实现 IDialogueActionHandler 的组件。用于把 OpenMiniGame、LoadScene、Quest 等行为交给外部模块执行。")]
+        [Tooltip("行为处理脚本。进入小游戏拖 MiniGameDialogueActionHandler；加载场景、任务、剧情、音频行为请拖对应模块的 Dialogue 行为桥接脚本；不用外部行为时可留空。")]
         [SerializeField] private MonoBehaviour actionHandlerProvider;
 
-        [Tooltip("未手动绑定处理器时，是否自动在场景中查找实现了对应接口的组件。正式场景建议手动绑定，调试阶段可开启。")]
+        [Tooltip("未手动绑定时是否自动查找 Dialogue 条件/行为桥接脚本。正式场景建议手动绑定具体脚本，例如 MiniGameDialogueActionHandler。")]
         [SerializeField] private bool autoFindExternalHandlers = true;
 
         [Tooltip("引用缺失或绑定类型不正确时是否输出警告。")]
