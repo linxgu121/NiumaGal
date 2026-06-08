@@ -150,4 +150,45 @@ Cursor.lockState = CursorLockMode.None;
 ## 协作边界
 Gal 负责“说什么、显示什么、玩家选什么”。任务推进、场景切换、小游戏入口、剧情 Flag 等行为由外部 Handler 实现。
 
+## 场景挂载与 Inspector 配置
+### NiumaDialogueController
+建议挂载位置：`CoreScene/BootstrapRoot/GameplayServicesRoot/GalRoot`，或只在剧情测试场景中临时放置。
+
+用途：创建对话服务，管理 DialogueAsset、对话黑板、Presenter 和行为处理器。
+
+| 字段 | 怎么填 | 可否留空 | 不填会怎样 |
+| --- | --- | --- | --- |
+| `Dialogue Assets` | 拖所有对话资产 | 不建议 | 只能播放外部直接传入的对话，按 ID 查找会失败 |
+| `Presenter Provider` | 拖 `NiumaUIDialogueViewBridge` 或自制 Presenter | 不可以 | 对话逻辑可推进，但不会显示 UI |
+| `Action Handler Provider` | 拖对话行为桥接脚本，例如 MiniGame / Audio / Quest Handler | 可以 | 对话 Action 不执行或被跳过 |
+| `Register Service To Context` | 核心场景开启 | 可以关闭 | 其他模块无法从 GameContext 获取对话服务 |
+
+### NiumaUIDialogueViewBridge
+建议挂载位置：全局对话 UI 物体或 `CoreScene/UIRoot/Canvas_Global/DialogueWindow`。
+
+| 字段 | 怎么填 | 可否留空 | 不填会怎样 |
+| --- | --- | --- | --- |
+| `UI Manager` | 拖 `UIManager` | 不建议 | ViewId 无法打开，对话框不显示 |
+| `View Id` | 填已注册的对话 ViewId，例如 `DialogueWindow` | 不可以 | 会出现“没有注册 DialogueWindowView” |
+| `Auto Open View` | 建议开启 | 可以 | 关闭后需要外部先打开对话窗口 |
+
+### DialogueWindowBinding / DialogueWindowView
+建议挂载位置：对话框预制体根节点。
+
+| 字段 | 怎么填 | 可否留空 | 不填会怎样 |
+| --- | --- | --- | --- |
+| `Name Text` | 拖说话人文本 | 可以 | 不显示说话人 |
+| `Content Text` | 拖正文文本 | 不可以 | 对话内容无法显示 |
+| `Choice Root` | 拖选项按钮父节点 | 有选项时不可以 | 最后一句带选项时无法显示选项 |
+| `Choice Button Prefab` | 拖选项按钮预制体 | 有选项时不可以 | 无法生成选项按钮 |
+| `Continue Button` | 拖继续按钮 | 可以 | 需要靠输入键推进 |
+
+### NiumaGalSaveAdapter
+建议挂载位置：`CoreScene/BootstrapRoot/SaveRoot/SaveAdapters`。
+
+| 字段 | 怎么填 | 可否留空 | 不填会怎样 |
+| --- | --- | --- | --- |
+| `Dialogue Controller` | 拖 `NiumaDialogueController` | 不建议 | 已读对话、环境叙事触发记录不存档 |
+| `Save Controller` | 拖 `NiumaSaveController` | 不建议 | 无法注册存档 Provider |
+
 
