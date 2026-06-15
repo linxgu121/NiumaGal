@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using NiumaGal.Dialogue;
 using NiumaGal.Dialogue.Data;
@@ -63,8 +63,8 @@ namespace NiumaGal.ToolkitBridge
         private string _fullText = string.Empty;
         private string _displayText = string.Empty;
         private bool _showContinueHint;
-        private DialogueChoiceOptionData[] _choices = Array.Empty<DialogueChoiceOptionData>();
-        private readonly List<DialogueChoiceOptionData> _choiceBuffer = new List<DialogueChoiceOptionData>(4);
+        private DialogueToolkitChoiceData[] _choices = Array.Empty<DialogueToolkitChoiceData>();
+        private readonly List<DialogueToolkitChoiceData> _choiceBuffer = new List<DialogueToolkitChoiceData>(4);
 
         private bool _cursorStateCaptured;
         private bool _previousCursorVisible;
@@ -184,7 +184,7 @@ namespace NiumaGal.ToolkitBridge
             _fullText = content ?? string.Empty;
             _displayText = useTypewriterText && presenter != null ? presenter.GetTypewriterDisplayText?.Invoke() ?? _fullText : _fullText;
             _showContinueHint = false;
-            _choices = Array.Empty<DialogueChoiceOptionData>();
+            _choices = Array.Empty<DialogueToolkitChoiceData>();
             _observedDialogueRevision = -1;
             _forceViewDataRefreshFrames = 1;
             _dirty = true;
@@ -269,18 +269,18 @@ namespace NiumaGal.ToolkitBridge
             var canShowChoices = viewData.ShowContinueHint && viewData.IsWaitingChoice;
             _choices = canShowChoices
                 ? BuildChoiceOptions(viewData.Choices)
-                : Array.Empty<DialogueChoiceOptionData>();
+                : Array.Empty<DialogueToolkitChoiceData>();
 
             _showContinueHint = viewData.ShowContinueHint && _choices.Length == 0;
             _dirty = true;
             UpdateCursorState();
         }
 
-        private DialogueChoiceOptionData[] BuildChoiceOptions(DialogueChoiceViewData[] choices)
+        private DialogueToolkitChoiceData[] BuildChoiceOptions(DialogueChoiceViewData[] choices)
         {
             if (choices == null || choices.Length == 0)
             {
-                return Array.Empty<DialogueChoiceOptionData>();
+                return Array.Empty<DialogueToolkitChoiceData>();
             }
 
             _choiceBuffer.Clear();
@@ -302,7 +302,7 @@ namespace NiumaGal.ToolkitBridge
                     ? choice.DisplayText
                     : (!string.IsNullOrWhiteSpace(choice.DisabledText) ? choice.DisabledText : choice.DisplayText);
 
-                _choiceBuffer.Add(new DialogueChoiceOptionData
+                _choiceBuffer.Add(new DialogueToolkitChoiceData
                 {
                     ChoiceId = choice.ChoiceId,
                     DisplayText = displayText,
@@ -312,7 +312,7 @@ namespace NiumaGal.ToolkitBridge
                 });
             }
 
-            return _choiceBuffer.Count > 0 ? _choiceBuffer.ToArray() : Array.Empty<DialogueChoiceOptionData>();
+            return _choiceBuffer.Count > 0 ? _choiceBuffer.ToArray() : Array.Empty<DialogueToolkitChoiceData>();
         }
 
         private void HandleChoiceSelected(string choiceId)
@@ -334,7 +334,7 @@ namespace NiumaGal.ToolkitBridge
                 return;
             }
 
-            _choices = Array.Empty<DialogueChoiceOptionData>();
+            _choices = Array.Empty<DialogueToolkitChoiceData>();
             _showContinueHint = false;
             _observedDialogueRevision = -1;
             _forceViewDataRefreshFrames = 1;
@@ -364,7 +364,7 @@ namespace NiumaGal.ToolkitBridge
                 Speaker = _speakerName ?? string.Empty,
                 Body = _displayText ?? string.Empty,
                 ShowContinueHint = _showContinueHint,
-                Choices = _choices ?? Array.Empty<DialogueChoiceOptionData>()
+                Choices = _choices ?? Array.Empty<DialogueToolkitChoiceData>()
             };
 
             var applied = _isShowing && uiManager.RefreshView(dialogueViewId, data);
@@ -503,7 +503,7 @@ namespace NiumaGal.ToolkitBridge
             _fullText = string.Empty;
             _displayText = string.Empty;
             _showContinueHint = false;
-            _choices = Array.Empty<DialogueChoiceOptionData>();
+            _choices = Array.Empty<DialogueToolkitChoiceData>();
             _observedDialogueRevision = -1;
             _forceViewDataRefreshFrames = 0;
         }
@@ -524,5 +524,24 @@ namespace NiumaGal.ToolkitBridge
             return FindObjectOfType<T>();
 #endif
         }
+    }
+
+}
+
+namespace NiumaGal.Presenter
+{
+    /// <summary>
+    /// 对话期间鼠标显示策略。
+    /// </summary>
+    public enum DialogueCursorMode
+    {
+        [Tooltip("不由对话桥接层控制鼠标。")]
+        DoNotControl = 0,
+
+        [Tooltip("整个对话期间显示并解锁鼠标。")]
+        VisibleDuringDialogue = 1,
+
+        [Tooltip("只有出现选项时显示并解锁鼠标。")]
+        VisibleWhenChoices = 2
     }
 }
