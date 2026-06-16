@@ -59,9 +59,14 @@ namespace NiumaGal.Editor
             context.SerializedObject.UpdateIfRequiredOrScript();
             speakerEditorHelper = new DialogueSpeakerEditorHelper(context, RebuildIndex);
 
-            BuildAssetInfo(root);
-            BuildValidationPanel(root);
-            BuildEditorBody(root);
+            var useDirectorWorkspace = context.HostKind == DialogueAssetEditorHostKind.EditorWindow;
+            if (!useDirectorWorkspace)
+            {
+                BuildAssetInfo(root);
+                BuildValidationPanel(root);
+            }
+
+            BuildEditorBody(root, useDirectorWorkspace);
             RebuildIndex();
 
             return root;
@@ -176,19 +181,14 @@ namespace NiumaGal.Editor
 
         private void BuildAssetInfo(VisualElement parent)
         {
-            var container = new VisualElement
+            var container = new Foldout
             {
-                name = "DialogueAssetInfo"
+                name = "DialogueAssetInfo",
+                text = "Asset Info",
+                value = context.HostKind != DialogueAssetEditorHostKind.EditorWindow
             };
             container.style.marginTop = 8f;
             container.style.marginBottom = 8f;
-
-            var title = new Label("Asset Info")
-            {
-                name = "DialogueAssetInfoTitle"
-            };
-            title.style.unityFontStyleAndWeight = FontStyle.Bold;
-            container.Add(title);
 
             AddProperty(container, "DialogueId");
             AddProperty(container, "DisplayName");
@@ -426,7 +426,7 @@ namespace NiumaGal.Editor
             RebuildIndex();
         }
 
-        private void BuildEditorBody(VisualElement parent)
+        private void BuildEditorBody(VisualElement parent, bool includeAssetToolsInRightSidebar)
         {
             var mainArea = new VisualElement
             {
@@ -434,7 +434,8 @@ namespace NiumaGal.Editor
             };
             mainArea.style.flexDirection = FlexDirection.Column;
             mainArea.style.flexGrow = 1f;
-            mainArea.style.minHeight = 520f;
+            mainArea.style.flexShrink = 1f;
+            mainArea.style.minHeight = includeAssetToolsInRightSidebar ? 0f : 520f;
 
             var body = new VisualElement
             {
@@ -442,7 +443,8 @@ namespace NiumaGal.Editor
             };
             body.style.flexDirection = FlexDirection.Row;
             body.style.flexGrow = 1f;
-            body.style.minHeight = 360f;
+            body.style.flexBasis = 0f;
+            body.style.minHeight = includeAssetToolsInRightSidebar ? 0f : 360f;
 
             sentenceListView = new DialogueSentenceListView(
                 sentenceItems,
@@ -453,16 +455,54 @@ namespace NiumaGal.Editor
                 DeleteSelectedSentence,
                 () => MoveSelectedSentence(-1),
                 () => MoveSelectedSentence(1));
-            body.Add(sentenceListView.Build());
+            var listPanel = sentenceListView.Build();
+            listPanel.style.flexGrow = 0f;
+            listPanel.style.minHeight = 0f;
+            body.Add(listPanel);
 
-            body.Add(BuildGraphWorkspace());
+            var graphPanel = BuildGraphWorkspace();
+            graphPanel.style.flexGrow = 1f;
+            graphPanel.style.flexBasis = 0f;
+            graphPanel.style.minHeight = 0f;
+            body.Add(graphPanel);
 
             sentenceDetailView = new DialogueSentenceDetailView(context, speakerEditorHelper, RebuildIndex);
-            detailPanel = sentenceDetailView.Build();
-            body.Add(detailPanel);
+            if (includeAssetToolsInRightSidebar)
+            {
+                var rightSidebar = new VisualElement
+                {
+                    name = "DialogueEditorRightSidebar"
+                };
+                rightSidebar.style.flexDirection = FlexDirection.Column;
+                rightSidebar.style.width = 460f;
+                rightSidebar.style.minWidth = 360f;
+                rightSidebar.style.flexShrink = 0f;
+                rightSidebar.style.minHeight = 0f;
+
+                BuildAssetInfo(rightSidebar);
+                BuildValidationPanel(rightSidebar);
+
+                detailPanel = sentenceDetailView.Build();
+                detailPanel.style.flexGrow = 1f;
+                detailPanel.style.minHeight = 0f;
+                rightSidebar.Add(detailPanel);
+                body.Add(rightSidebar);
+            }
+            else
+            {
+                detailPanel = sentenceDetailView.Build();
+                body.Add(detailPanel);
+            }
 
             mainArea.Add(body);
-            mainArea.Add(BuildSimulator());
+            var simulatorPanel = BuildSimulator();
+            simulatorPanel.style.flexShrink = 0f;
+            if (includeAssetToolsInRightSidebar)
+            {
+                simulatorPanel.style.maxHeight = 180f;
+            }
+
+            mainArea.Add(simulatorPanel);
             parent.Add(mainArea);
         }
 

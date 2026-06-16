@@ -30,6 +30,7 @@ NiumaGal 现在提供 UI Toolkit 专用 DialogueAsset 编辑器，用于替代 U
 - 在 Project 面板选中 `DialogueAsset`：Inspector 会自动显示专用双栏编辑器。
 - 菜单打开：`Tools/Niuma/Gal/Dialogue Asset Editor`。
 - 独立窗口不会自动跟随 Project 选择，窗口顶部的 `Dialogue Asset` 字段需要手动拖入要编辑的资产。
+- 正式编辑对话树时推荐使用独立窗口，并把窗口横向拉宽。Inspector 入口只适合快速改文本或少量字段；Graph 主工作区、右侧详情和底部 Simulator 都在独立窗口里更清晰。
 
 ### 推荐配置
 在 Project Settings 中打开：
@@ -58,12 +59,29 @@ Project 面板右键
 
 `DialogueSpeakerCatalog` 只服务编辑器体验。运行时仍读取 `DialogueSentence.Speaker` 字符串，不会因为没有 Catalog 而不能播放对话。
 
-### 编辑器界面
-专用编辑器分为三块：
+### 导演式编辑器界面
+专用编辑器现在采用“左列表 + 中间 Graph + 右详情 + 底部模拟器”的导演式布局：
 
-- 顶部 Toolbar：搜索、校验、聚焦起始句、打开 Graph 预览、重建索引。
-- 左侧 Sentence 列表：显示句子序号、SentenceId、Speaker、文本摘要、语音和选项数量。
-- 右侧详情：编辑当前句子的 Speaker、文本、VoiceClip、Conditions、EnterActions、ExitActions、Choices。
+- 顶部 Toolbar：搜索、校验、聚焦起始句、自动整理 Graph、清理 Graph Metadata、重建索引。
+- 左侧 Sentence 列表：显示句子序号、SentenceId、Speaker、文本摘要、语音和选项数量，用于快速搜索和定位。
+- 中间 Graph Workspace：显示对话树节点和分支连线，是主要结构工作区。
+- 右侧栏：上方是可折叠 `Asset Info` 和校验面板，下方是当前句子的详情编辑区。`Asset Info` 默认在独立窗口中折叠，避免挤压 Graph。
+- 底部 Play Mode Simulator：在编辑器内本地预演对话，不需要进入游戏。
+
+建议使用顺序：
+
+1. 打开 `Tools / Niuma / Gal / Dialogue Asset Editor`。
+2. 将目标 `DialogueAsset` 拖到顶部 `Dialogue Asset` 字段。
+3. 在左侧列表新建或搜索句子。
+4. 在中间 Graph 查看结构，拖动节点整理阅读顺序。
+5. 在右侧详情修改文本、Speaker、条件、Action 和 Choice。
+6. 点击 `Validate` 检查错误，再用底部 Simulator 播放验证分支。
+
+如果 Graph 区域看起来太小，优先检查三件事：
+
+- 是否打开的是独立窗口，而不是窄 Inspector。
+- `Asset Info` 是否展开；正式看图时可以先折叠。
+- 窗口高度是否被 Simulator 占用过多；Simulator 是底部辅助区，Graph 应该占据中间主要高度。
 
 句子列表按钮：
 
@@ -92,7 +110,9 @@ Project 面板右键
 | --- | --- |
 | `Validate` | 立即运行校验，并刷新校验面板 |
 | `Focus Start` | 跳到 `StartSentenceId` 指向的句子；为空时跳到第一句 |
-| `Open Graph Preview` | 打开只读对话树预览 |
+| `Rearrange` | 按起始句自动整理中间 Graph 节点，会覆盖当前手动摆放位置 |
+| `Clean Metadata` | 清理已经没有对应句子的 Graph Metadata 孤儿节点 |
+| `Open Graph Preview` | 打开旧的只读预览窗口，仅用于临时对照；正式工作以中间 Graph Workspace 为准 |
 | `Rebuild Index` | 重建句子列表、搜索结果和校验缓存 |
 
 ### 校验面板
@@ -117,8 +137,20 @@ Project 面板右键
 
 校验项右侧的 `Focus #n` 会跳到对应句子，并自动停止当前 Voice 试听。
 
-### Graph Preview
-`Open Graph Preview` 会打开只读对话树：
+### Graph Workspace
+中间 `Graph Workspace` 是正式主工作区。每个 `DialogueSentence` 会显示为一个节点，连线由 `Choices / Behavior / NextSentenceId` 自动生成。
+
+常用操作：
+
+| 操作 | 说明 |
+| --- | --- |
+| 单击节点 | 选中该句，并刷新右侧详情 |
+| 双击节点 | 聚焦该句，方便从 Graph 跳回右侧编辑 |
+| 拖动节点 | 只改变编辑器里的节点位置，不改变运行时对话顺序 |
+| `Rearrange` | 自动按起始句做树状布局；已有手动布局会被覆盖，点击前会弹确认 |
+| `Clean Metadata` | 删除已经找不到对应句子的节点位置记录 |
+
+Graph 连线规则：
 
 - 普通无选项句子按数组顺序连接到下一句。
 - `Continue` 连接到下一句。
@@ -127,7 +159,72 @@ Project 面板右键
 - `Custom` 如果填写 `NextSentenceId`，连接到该句；否则连接到 End。
 - 缺失目标会连接到 `Missing / Unknown` 节点。
 
-Graph 只用于预览结构，不会写回资产。窗口内禁止拖拽创建新边；需要改跳转请回到详情面板修改 `Behavior` 和 `NextSentenceId`。
+Graph 第一版只允许拖动节点，不允许拖线创建或修改分支。需要改变跳转逻辑时，请在右侧详情里修改 `Choice.Behavior` 和 `Choice.NextSentenceId`。
+
+### Graph Metadata 文件
+拖动节点、点击 `Rearrange` 或保存 Graph 视图状态时，编辑器会为该 `DialogueAsset` 懒创建一个 Editor-only Metadata 资产。它只服务编辑器，不参与运行时播放。
+
+文件位置：
+
+```text
+NiumaGal/Editor/Metadata/{DialogueAsset文件名}_EditorMeta.asset
+```
+
+使用规则：
+
+- Metadata 建议提交到版本库。这样编剧调整好的节点位置、Graph 缩放和平移状态可以跟随团队同步。
+- Metadata 不需要挂到任何场景物体上，也不要拖进 Addressables 或运行时资源包。
+- 句子的 Graph 关联使用自动生成的 `EditorGuid`，不是 `SentenceId`。所以修改 `SentenceId` 不会丢失节点位置。
+- 删除句子后，对应 Metadata 会变成 orphan。校验面板会提示，确认不需要恢复该句后再点 `Clean Metadata` 清理。
+- 当前 Metadata 文件名跟随 DialogueAsset 文件名。重命名 DialogueAsset 后会创建新的 Metadata，旧布局不会自动迁移；需要保留布局时，请同步重命名旧 Metadata 或重新点击 `Rearrange`。
+
+### 叙事分类与节点颜色
+每个句子都有 `NarrativeCategory`，用于让 Graph 颜色更像导演板：
+
+| 分类 | 建议用途 |
+| --- | --- |
+| `Main` | 主线剧情 |
+| `Branch` | 支线剧情 |
+| `FamilyLegend` | 家族传说、传承叙事 |
+| `Daily` | 日常闲聊 |
+| `Custom` | 项目自定义分类 |
+| `None` | 未分类，合法默认值，只在校验里显示 Info |
+
+颜色配置位置：
+
+```text
+Project Settings
+└── Niuma
+    └── Gal Editor
+        └── Narrative Category Colors
+```
+
+颜色只影响编辑器 Graph 显示。运行时只保留分类事实，不读取编辑器颜色。
+
+### Play Mode Simulator
+底部 `Play Mode Simulator` 用于在编辑器内预演对话，不需要进入 Unity Play Mode。
+
+按钮说明：
+
+| 按钮 / 字段 | 作用 |
+| --- | --- |
+| `Play` | 从 `StartSentenceId` 或第一句开始模拟 |
+| `Pause / Resume` | 暂停或继续打字机 |
+| `Stop` | 停止模拟并停止当前语音试听 |
+| `Skip Typewriter` | 立刻显示当前句完整文本 |
+| `Advance` | 当前句无选项时继续下一句 |
+| `Conditions` | 选择条件全部通过、全部失败或手动控制 |
+| `Manual Pass` | `Conditions = Manual` 时决定当前条件是否通过 |
+
+模拟器边界：
+
+- 模拟器不接真实 `DialogueService`，不会写已读进度。
+- 模拟器不会执行真实 Action 副作用。`OpenMiniGame`、`LoadScene`、`AcceptQuest`、`PlayAudioCue` 等只写入模拟日志，不会真的切场景、接任务、存档或打开小游戏。
+- 模拟器会播放句子 `VoiceClip` 用于试听；点击 Stop、切换资产、关闭窗口、进入 Unity Play Mode 时会自动停止。
+- 条件默认按 `Condition Mode` 模拟，不会查询真实背包、任务、剧情 Flag。
+
+### Graph Preview（Legacy）
+`Open Graph Preview` 会打开旧的只读对话树预览窗口。它保留用于临时对照和调试；正式编辑请使用主窗口中间的 `Graph Workspace`。
 
 ### Voice 试听
 - 句子详情里的 `Voice Clip` 可点击 `Preview` 试听，`Stop` 停止。
