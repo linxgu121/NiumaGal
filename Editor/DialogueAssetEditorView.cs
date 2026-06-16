@@ -8,7 +8,7 @@ using UnityEngine.UIElements;
 
 namespace NiumaGal.Editor
 {
-    // TODO(Phase 5): Replace Play Mode Simulator placeholder with DialogueEditorSimulator.
+    // TODO(Phase 6): Keep graph, validation and simulator refreshes incremental when editing large assets.
     public sealed class DialogueAssetEditorView
     {
         private readonly DialogueAssetEditorContext context;
@@ -23,6 +23,7 @@ namespace NiumaGal.Editor
         private DialogueSentenceListView sentenceListView;
         private DialogueSentenceDetailView sentenceDetailView;
         private DialogueGraphWorkspace graphWorkspace;
+        private DialogueEditorSimulator simulator;
         private DialogueSpeakerEditorHelper speakerEditorHelper;
         private DialogueValidationReport validationReport;
 
@@ -460,7 +461,7 @@ namespace NiumaGal.Editor
             body.Add(detailPanel);
 
             mainArea.Add(body);
-            mainArea.Add(BuildSimulatorPlaceholder());
+            mainArea.Add(BuildSimulator());
             parent.Add(mainArea);
         }
 
@@ -492,34 +493,30 @@ namespace NiumaGal.Editor
             }
         }
 
-        private VisualElement BuildSimulatorPlaceholder()
+        private VisualElement BuildSimulator()
         {
-            var container = new VisualElement
+            try
             {
-                name = "DialogueSimulatorPlaceholder"
-            };
-            container.style.marginTop = 8f;
-            container.style.paddingLeft = 8f;
-            container.style.paddingRight = 8f;
-            container.style.paddingTop = 6f;
-            container.style.paddingBottom = 6f;
-            container.style.borderLeftWidth = 1f;
-            container.style.borderRightWidth = 1f;
-            container.style.borderTopWidth = 1f;
-            container.style.borderBottomWidth = 1f;
-            container.style.borderLeftColor = new Color(0.25f, 0.25f, 0.25f);
-            container.style.borderRightColor = new Color(0.25f, 0.25f, 0.25f);
-            container.style.borderTopColor = new Color(0.25f, 0.25f, 0.25f);
-            container.style.borderBottomColor = new Color(0.25f, 0.25f, 0.25f);
-
-            var title = new Label("Play Mode Simulator")
+                simulator = new DialogueEditorSimulator(context.Asset, HandleSimulatorSentenceFocused);
+                return simulator.Build();
+            }
+            catch (Exception ex)
             {
-                name = "DialogueSimulatorTitle"
-            };
-            title.style.unityFontStyleAndWeight = FontStyle.Bold;
-            container.Add(title);
-            container.Add(new HelpBox("阶段 3 只预留底部模拟器容器。Play / Pause / Stop / 打字机 / 选项跳转将在阶段 5 接入。", HelpBoxMessageType.Info));
-            return container;
+                simulator = null;
+                var container = new VisualElement
+                {
+                    name = "DialogueSimulatorFallback"
+                };
+                container.style.marginTop = 8f;
+                container.style.paddingLeft = 8f;
+                container.style.paddingRight = 8f;
+                container.style.paddingTop = 6f;
+                container.style.paddingBottom = 6f;
+                container.Add(new HelpBox(
+                    $"Simulator 初始化失败。原因：{ex.GetType().Name}: {ex.Message}",
+                    HelpBoxMessageType.Warning));
+                return container;
+            }
         }
 
         private void AddProperty(VisualElement parent, string propertyName)
@@ -541,6 +538,11 @@ namespace NiumaGal.Editor
         private void HandleGraphSentenceSelected(int originalIndex)
         {
             DialogueEditorAudioPreview.Stop();
+            SelectSentence(originalIndex);
+        }
+
+        private void HandleSimulatorSentenceFocused(int originalIndex)
+        {
             SelectSentence(originalIndex);
         }
 

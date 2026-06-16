@@ -8,14 +8,17 @@ namespace NiumaGal.Editor
     public sealed class DialogueAssetInspector : UnityEditor.Editor
     {
         private DialogueAssetEditorSession session;
+        private VisualElement inspectorRoot;
 
         private void OnDisable()
         {
+            inspectorRoot?.Clear();
             DialogueEditorAudioPreview.Stop();
         }
 
         private void OnDestroy()
         {
+            inspectorRoot?.Clear();
             DialogueEditorAudioPreview.Stop();
         }
 
@@ -33,7 +36,8 @@ namespace NiumaGal.Editor
             };
 
             var view = new DialogueAssetEditorView(context, session);
-            return view.Build();
+            inspectorRoot = view.Build();
+            return inspectorRoot;
         }
     }
 }

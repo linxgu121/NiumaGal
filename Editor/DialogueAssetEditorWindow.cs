@@ -36,12 +36,14 @@ namespace NiumaGal.Editor
 
         private void OnDisable()
         {
+            viewHost?.Clear();
             DialogueEditorAudioPreview.Stop();
             DisposeCurrentSerializedObject();
         }
 
         private void OnDestroy()
         {
+            viewHost?.Clear();
             DialogueEditorAudioPreview.Stop();
             DisposeCurrentSerializedObject();
         }
