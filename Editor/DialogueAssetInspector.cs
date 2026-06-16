@@ -9,9 +9,20 @@ namespace NiumaGal.Editor
     {
         private DialogueAssetEditorSession session;
 
+        private void OnDisable()
+        {
+            DialogueEditorAudioPreview.Stop();
+        }
+
+        private void OnDestroy()
+        {
+            DialogueEditorAudioPreview.Stop();
+        }
+
         public override VisualElement CreateInspectorGUI()
         {
             var asset = target as DialogueAsset;
+            DialogueAssetEditorMetadataStore.EnsureSentenceEditorGuids(asset);
             session ??= new DialogueAssetEditorSession(DialogueAssetEditorHostKind.Inspector);
 
             var context = new DialogueAssetEditorContext

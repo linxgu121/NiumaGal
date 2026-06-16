@@ -36,6 +36,13 @@ namespace NiumaGal.Editor
 
         private void OnDisable()
         {
+            DialogueEditorAudioPreview.Stop();
+            DisposeCurrentSerializedObject();
+        }
+
+        private void OnDestroy()
+        {
+            DialogueEditorAudioPreview.Stop();
             DisposeCurrentSerializedObject();
         }
 
@@ -63,6 +70,7 @@ namespace NiumaGal.Editor
                 return;
             }
 
+            DialogueEditorAudioPreview.Stop();
             currentAsset = asset;
             RebuildView();
         }
@@ -79,6 +87,7 @@ namespace NiumaGal.Editor
             DisposeCurrentSerializedObject();
             if (currentAsset != null)
             {
+                DialogueAssetEditorMetadataStore.EnsureSentenceEditorGuids(currentAsset);
                 currentSerializedObject = new SerializedObject(currentAsset);
             }
 

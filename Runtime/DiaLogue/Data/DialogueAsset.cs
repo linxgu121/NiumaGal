@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NiumaGal.Enum;
 using UnityEngine;
 
 namespace NiumaGal.Dialogue.Data
@@ -16,6 +17,12 @@ namespace NiumaGal.Dialogue.Data
         public string Text;
 
         public AudioClip VoiceClip;
+
+        [Tooltip("叙事分类。用于编辑器 Graph 节点颜色和后续叙事筛选；None 表示未分类，不影响运行。")]
+        public DialogueNarrativeCategory NarrativeCategory;
+
+        [HideInInspector]
+        public string EditorGuid;
 
         [Tooltip("进入该句前需要满足的条件。为空表示无条件。")]
         public DialogueConditionData[] Conditions = Array.Empty<DialogueConditionData>();

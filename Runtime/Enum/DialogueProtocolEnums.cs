@@ -3,6 +3,30 @@ using UnityEngine;
 namespace NiumaGal.Enum
 {
     /// <summary>
+    /// 对话句子的叙事分类。运行时只保存分类事实，编辑器根据该值映射 Graph 节点颜色。
+    /// </summary>
+    public enum DialogueNarrativeCategory
+    {
+        [InspectorName("未分类")]
+        None = 0,
+
+        [InspectorName("主线")]
+        Main = 1,
+
+        [InspectorName("支线")]
+        Branch = 2,
+
+        [InspectorName("家族传说")]
+        FamilyLegend = 3,
+
+        [InspectorName("日常")]
+        Daily = 4,
+
+        [InspectorName("自定义")]
+        Custom = 100
+    }
+
+    /// <summary>
     /// 对话操作失败原因。用于 Service / Bridge 返回结构化错误，避免 UI 依赖字符串匹配。
     /// </summary>
     public enum DialogueOperationFailureReason
