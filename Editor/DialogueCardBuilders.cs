@@ -9,13 +9,14 @@ namespace NiumaGal.Editor
     public abstract class DialogueArrayCardBuilderBase
     {
         private readonly SerializedObject serializedObject;
-        private readonly Action onChanged;
 
         protected DialogueArrayCardBuilderBase(SerializedObject serializedObject, Action onChanged)
         {
             this.serializedObject = serializedObject ?? throw new ArgumentNullException(nameof(serializedObject));
-            this.onChanged = onChanged;
+            OnChanged = onChanged;
         }
+
+        protected Action OnChanged { get; }
 
         protected void AddArrayCommandRow(VisualElement parent, SerializedProperty arrayProperty, string itemName, Action<SerializedProperty> initializer)
         {
@@ -107,7 +108,7 @@ namespace NiumaGal.Editor
             initializer?.Invoke(refreshedArray.GetArrayElementAtIndex(index));
             serializedObject.ApplyModifiedProperties();
             serializedObject.UpdateIfRequiredOrScript();
-            onChanged?.Invoke();
+            OnChanged?.Invoke();
         }
 
         private void DeleteArrayElementAndRefresh(SerializedProperty arrayProperty, int index)
@@ -128,7 +129,7 @@ namespace NiumaGal.Editor
             DialogueSerializedPropertyUtility.DeleteArrayElement(refreshedArray, index);
             serializedObject.ApplyModifiedProperties();
             serializedObject.UpdateIfRequiredOrScript();
-            onChanged?.Invoke();
+            OnChanged?.Invoke();
         }
     }
 
@@ -161,17 +162,17 @@ namespace NiumaGal.Editor
             parent.Add(foldout);
         }
 
-        private static void AddBody(VisualElement parent, SerializedProperty condition)
+        private void AddBody(VisualElement parent, SerializedProperty condition)
         {
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "ConditionId", "Condition Id");
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "Type", "Condition Type");
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "TargetId", "Target Id");
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "Operator", "Operator");
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "StringValue", "String Value");
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "IntValue", "Int Value");
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "FloatValue", "Float Value");
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "BoolValue", "Bool Value");
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "CustomData", "Custom Data");
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "ConditionId", "Condition Id", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "Type", "Condition Type", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "TargetId", "Target Id", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "Operator", "Operator", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "StringValue", "String Value", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "IntValue", "Int Value", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "FloatValue", "Float Value", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "BoolValue", "Bool Value", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "CustomData", "Custom Data", OnChanged);
         }
 
         private static void InitializeElement(SerializedProperty condition)
@@ -225,17 +226,17 @@ namespace NiumaGal.Editor
             parent.Add(foldout);
         }
 
-        private static void AddBody(VisualElement parent, SerializedProperty action)
+        private void AddBody(VisualElement parent, SerializedProperty action)
         {
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "ActionId", "Action Id");
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "Type", "Action Type");
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "ActionId", "Action Id", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "Type", "Action Type", OnChanged);
             parent.Add(new HelpBox(GetTargetHint(action), HelpBoxMessageType.Info));
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "TargetId", "Target Id");
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "StringValue", "String Value");
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "IntValue", "Int Value");
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "FloatValue", "Float Value");
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "BoolValue", "Bool Value");
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "CustomData", "Custom Data");
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "TargetId", "Target Id", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "StringValue", "String Value", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "IntValue", "Int Value", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "FloatValue", "Float Value", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "BoolValue", "Bool Value", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "CustomData", "Custom Data", OnChanged);
         }
 
         private static void InitializeElement(SerializedProperty action)
@@ -326,12 +327,12 @@ namespace NiumaGal.Editor
                 var choice = choicesProperty.GetArrayElementAtIndex(i);
                 var card = BuildCardFoldout(BuildCardTitle(choice, i));
                 AddCardDeleteButton(card, choicesProperty, i, "Choice");
-                DialogueSerializedPropertyUtility.AddRelativeProperty(card, choice, "ChoiceId", "Choice Id");
-                DialogueSerializedPropertyUtility.AddRelativeProperty(card, choice, "DisplayText", "Display Text");
-                DialogueSerializedPropertyUtility.AddRelativeProperty(card, choice, "Behavior", "Behavior");
-                DialogueSerializedPropertyUtility.AddRelativeProperty(card, choice, "NextSentenceId", "Next Sentence Id");
-                DialogueSerializedPropertyUtility.AddRelativeProperty(card, choice, "HideWhenUnavailable", "Hide When Unavailable");
-                DialogueSerializedPropertyUtility.AddRelativeProperty(card, choice, "DisabledText", "Disabled Text");
+                DialogueSerializedPropertyUtility.AddRelativeProperty(card, choice, "ChoiceId", "Choice Id", OnChanged);
+                DialogueSerializedPropertyUtility.AddRelativeProperty(card, choice, "DisplayText", "Display Text", OnChanged);
+                DialogueSerializedPropertyUtility.AddRelativeProperty(card, choice, "Behavior", "Behavior", OnChanged);
+                DialogueSerializedPropertyUtility.AddRelativeProperty(card, choice, "NextSentenceId", "Next Sentence Id", OnChanged);
+                DialogueSerializedPropertyUtility.AddRelativeProperty(card, choice, "HideWhenUnavailable", "Hide When Unavailable", OnChanged);
+                DialogueSerializedPropertyUtility.AddRelativeProperty(card, choice, "DisabledText", "Disabled Text", OnChanged);
                 conditionCardBuilder.AddCards(card, choice.FindPropertyRelative("Conditions"), "Choice Conditions", "该选项显示或可点击前需要满足的条件。");
                 actionCardBuilder.AddCards(card, choice.FindPropertyRelative("Actions"), "Choice Actions", "玩家点击该选项后立即执行，然后再执行当前句子的 Exit Actions。");
                 foldout.Add(card);

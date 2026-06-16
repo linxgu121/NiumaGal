@@ -87,6 +87,26 @@ namespace NiumaGal.Editor
             UnregisterPlayModeHook();
         }
 
+        public void Refresh()
+        {
+            RebuildIndex();
+            var sentence = ResolveCurrentSentence();
+            if (currentIndex >= 0 && sentence == null)
+            {
+                Stop();
+                return;
+            }
+
+            if (sentence != null)
+            {
+                fullText = sentence.Text ?? string.Empty;
+                visibleCharacters = Mathf.Clamp(visibleCharacters, 0f, fullText.Length);
+            }
+
+            RenderCurrentSentence();
+            UpdateStateLabels();
+        }
+
         public void Stop()
         {
             if (!isPlaying && currentIndex < 0)

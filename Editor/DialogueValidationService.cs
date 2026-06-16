@@ -105,6 +105,7 @@ namespace NiumaGal.Editor
             ValidateAssetActions(asset.OnCompleteActions, "OnCompleteActions", builder);
             ValidateAssetActions(asset.OnAbortActions, "OnAbortActions", builder);
             ValidateStartSentence(asset.StartSentenceId, sentenceIdToIndex, builder);
+            ValidateGraphMetadata(asset, builder);
 
             for (var i = 0; i < sentences.Count; i++)
             {
@@ -117,9 +118,18 @@ namespace NiumaGal.Editor
 
                 var plainText = StripRichTextTags(sentence.Text);
                 totalCharacters += plainText.Length;
-                if (plainText.Length > 120)
+                if (string.IsNullOrWhiteSpace(plainText))
+                {
+                    builder.Add(DialogueValidationSeverity.Warning, "text_empty", $"Sentence {i + 1} text is empty.", i);
+                }
+                else if (plainText.Length > 120)
                 {
                     builder.Add(DialogueValidationSeverity.Warning, "text_too_long", $"第 {i + 1} 句文本较长（{plainText.Length} 字），建议拆句提升阅读节奏。", i);
+                }
+
+                if (sentence.VoiceClip == null)
+                {
+                    builder.Add(DialogueValidationSeverity.Warning, "voice_clip_empty", $"Sentence {i + 1} VoiceClip is empty.", i);
                 }
 
                 ValidateSpeaker(sentence, speakerCatalog, warnWhenSpeakerEmpty, i, builder);
@@ -278,6 +288,56 @@ namespace NiumaGal.Editor
             {
                 builder.Add(DialogueValidationSeverity.Info, "narrative_category_none", $"Sentence {sentenceIndex + 1} 未设置叙事分类。None 是合法默认值，不影响运行。", sentenceIndex);
             }
+        }
+
+        private static void ValidateGraphMetadata(DialogueAsset asset, ReportBuilder builder)
+        {
+            var metadata = DialogueAssetEditorMetadataStore.Load(asset);
+            if (metadata == null)
+            {
+                return;
+            }
+
+            var orphanNodes = DialogueAssetEditorMetadataStore.GetOrphanNodes(asset, metadata);
+            if (orphanNodes.Length <= 0)
+            {
+                return;
+            }
+
+            builder.Add(
+                DialogueValidationSeverity.Warning,
+                "graph_metadata_orphan",
+                $"Graph Metadata contains {orphanNodes.Length} orphan node record(s): {BuildOrphanNodeSummary(orphanNodes)}. Use Clean Metadata after confirming the deleted sentences do not need their node positions restored.");
+        }
+
+        private static string BuildOrphanNodeSummary(DialogueGraphNodeMetadata[] orphanNodes)
+        {
+            if (orphanNodes == null || orphanNodes.Length == 0)
+            {
+                return "<none>";
+            }
+
+            const int maxShown = 5;
+            var labels = new List<string>(Mathf.Min(orphanNodes.Length, maxShown) + 1);
+            for (var i = 0; i < orphanNodes.Length && i < maxShown; i++)
+            {
+                var node = orphanNodes[i];
+                if (node == null)
+                {
+                    continue;
+                }
+
+                labels.Add(string.IsNullOrWhiteSpace(node.LastKnownSentenceId)
+                    ? node.EditorGuid
+                    : node.LastKnownSentenceId);
+            }
+
+            if (orphanNodes.Length > maxShown)
+            {
+                labels.Add($"+{orphanNodes.Length - maxShown} more");
+            }
+
+            return labels.Count == 0 ? "<unknown>" : string.Join(", ", labels);
         }
 
         private static void ValidateChoices(DialogueChoiceData[] choices, Dictionary<string, int> sentenceIdToIndex, int sentenceIndex, ReportBuilder builder)

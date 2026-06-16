@@ -8,12 +8,18 @@ namespace NiumaGal.Editor
 {
     internal static class DialogueSerializedPropertyUtility
     {
-        public static void AddRelativeProperty(VisualElement parent, SerializedProperty owner, string propertyName, string label)
+        public static void AddRelativeProperty(VisualElement parent, SerializedProperty owner, string propertyName, string label, Action onChanged = null)
         {
             var property = owner?.FindPropertyRelative(propertyName);
             if (property != null)
             {
-                parent.Add(new PropertyField(property, label));
+                var field = new PropertyField(property, label);
+                if (onChanged != null)
+                {
+                    field.TrackPropertyValue(property, _ => onChanged());
+                }
+
+                parent.Add(field);
             }
         }
 

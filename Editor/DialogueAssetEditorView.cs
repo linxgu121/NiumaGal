@@ -8,7 +8,7 @@ using UnityEngine.UIElements;
 
 namespace NiumaGal.Editor
 {
-    // TODO(Phase 6): Keep graph, validation and simulator refreshes incremental when editing large assets.
+    // TODO(Phase 6+): Keep graph, validation and simulator refreshes incremental when editing large assets.
     public sealed class DialogueAssetEditorView
     {
         private readonly DialogueAssetEditorContext context;
@@ -93,6 +93,7 @@ namespace NiumaGal.Editor
             RefreshSentenceItems();
             RunValidation(false);
             graphWorkspace?.Refresh(validationReport?.Graph ?? DialogueValidationService.BuildGraph(context.Asset));
+            simulator?.Refresh();
         }
 
         private void BuildToolbar(VisualElement parent)
@@ -524,7 +525,9 @@ namespace NiumaGal.Editor
             var property = context.SerializedObject.FindProperty(propertyName);
             if (property != null)
             {
-                parent.Add(new PropertyField(property));
+                var field = new PropertyField(property);
+                field.TrackPropertyValue(property, _ => RebuildIndex());
+                parent.Add(field);
             }
         }
 

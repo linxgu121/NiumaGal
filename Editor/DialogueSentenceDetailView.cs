@@ -16,6 +16,8 @@ namespace NiumaGal.Editor
         private readonly DialogueChoiceCardBuilder choiceCardBuilder;
 
         private ScrollView scrollView;
+        private bool deferredRefreshQueued;
+        private double deferredRefreshAt;
 
         public DialogueSentenceDetailView(
             DialogueAssetEditorContext context,
@@ -25,9 +27,9 @@ namespace NiumaGal.Editor
             this.context = context ?? throw new ArgumentNullException(nameof(context));
             this.speakerEditorHelper = speakerEditorHelper ?? throw new ArgumentNullException(nameof(speakerEditorHelper));
             this.onChanged = onChanged;
-            conditionCardBuilder = new DialogueConditionCardBuilder(context.SerializedObject, onChanged);
-            actionCardBuilder = new DialogueActionCardBuilder(context.SerializedObject, onChanged);
-            choiceCardBuilder = new DialogueChoiceCardBuilder(context.SerializedObject, onChanged, conditionCardBuilder, actionCardBuilder);
+            conditionCardBuilder = new DialogueConditionCardBuilder(context.SerializedObject, ScheduleDeferredRefresh);
+            actionCardBuilder = new DialogueActionCardBuilder(context.SerializedObject, ScheduleDeferredRefresh);
+            choiceCardBuilder = new DialogueChoiceCardBuilder(context.SerializedObject, ScheduleDeferredRefresh, conditionCardBuilder, actionCardBuilder);
         }
 
         public VisualElement Build()
@@ -38,6 +40,7 @@ namespace NiumaGal.Editor
             };
             scrollView.style.flexGrow = 1f;
             scrollView.style.minWidth = 360f;
+            scrollView.RegisterCallback<DetachFromPanelEvent>(_ => CancelDeferredRefresh());
             return scrollView;
         }
 
@@ -72,7 +75,7 @@ namespace NiumaGal.Editor
             speakerEditorHelper.AddSpeakerEditor(scrollView, sentenceProperty);
             AddTextEditor(sentenceProperty);
             AddVoiceEditor(sentenceProperty);
-            DialogueSerializedPropertyUtility.AddRelativeProperty(scrollView, sentenceProperty, "NarrativeCategory", "Narrative Category");
+            DialogueSerializedPropertyUtility.AddRelativeProperty(scrollView, sentenceProperty, "NarrativeCategory", "Narrative Category", ScheduleDeferredRefresh);
             conditionCardBuilder.AddCards(scrollView, sentenceProperty.FindPropertyRelative("Conditions"), "Sentence Conditions", "进入本句前需要满足的条件。不满足时本句不会被播放。");
             actionCardBuilder.AddCards(scrollView, sentenceProperty.FindPropertyRelative("EnterActions"), "Enter Actions", "进入本句并开始播放时执行。不要把离开本句后的行为填在这里。");
             actionCardBuilder.AddCards(scrollView, sentenceProperty.FindPropertyRelative("ExitActions"), "Exit Actions", "本句完整推进离开时执行。Choice 被点击后会先执行 Choice Actions，再执行这里。");
@@ -111,8 +114,7 @@ namespace NiumaGal.Editor
                 textProperty.stringValue = evt.newValue ?? string.Empty;
                 context.SerializedObject.ApplyModifiedProperties();
                 DialogueEditorTextUtility.UpdateTextStats(statsLabel, evt.newValue);
-                // TODO(Phase 6+): Keep the left list summary in sync while typing without
-                // calling RebuildIndex() on every character.
+                ScheduleDeferredRefresh();
             });
 
             scrollView.Add(textField);
@@ -185,6 +187,41 @@ namespace NiumaGal.Editor
             {
                 scrollView.Add(new HelpBox("当前 Unity 版本无法通过 AudioUtil 试听 VoiceClip。", HelpBoxMessageType.Info));
             }
+        }
+
+        private void ScheduleDeferredRefresh()
+        {
+            deferredRefreshAt = EditorApplication.timeSinceStartup + 0.25d;
+            if (deferredRefreshQueued)
+            {
+                return;
+            }
+
+            deferredRefreshQueued = true;
+            EditorApplication.update += FlushDeferredRefreshWhenReady;
+        }
+
+        private void FlushDeferredRefreshWhenReady()
+        {
+            if (EditorApplication.timeSinceStartup < deferredRefreshAt)
+            {
+                return;
+            }
+
+            EditorApplication.update -= FlushDeferredRefreshWhenReady;
+            deferredRefreshQueued = false;
+            onChanged?.Invoke();
+        }
+
+        private void CancelDeferredRefresh()
+        {
+            if (!deferredRefreshQueued)
+            {
+                return;
+            }
+
+            EditorApplication.update -= FlushDeferredRefreshWhenReady;
+            deferredRefreshQueued = false;
         }
     }
 }
