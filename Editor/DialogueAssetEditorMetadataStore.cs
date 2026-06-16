@@ -7,6 +7,20 @@ using UnityEngine;
 
 namespace NiumaGal.Editor
 {
+    public readonly struct DialogueGraphNodePositionChange
+    {
+        public DialogueGraphNodePositionChange(string editorGuid, string sentenceId, Vector2 position)
+        {
+            EditorGuid = editorGuid ?? string.Empty;
+            SentenceId = sentenceId ?? string.Empty;
+            Position = position;
+        }
+
+        public string EditorGuid { get; }
+        public string SentenceId { get; }
+        public Vector2 Position { get; }
+    }
+
     public static class DialogueAssetEditorMetadataStore
     {
         private const string MetadataSuffix = "_EditorMeta.asset";
@@ -240,6 +254,73 @@ namespace NiumaGal.Editor
             metadata.ViewState.Scale = scale;
             SaveMetadata(metadata);
             return true;
+        }
+
+        public static bool ApplyGraphChanges(
+            DialogueAsset asset,
+            IList<DialogueGraphNodePositionChange> nodePositions,
+            bool hasViewState,
+            Vector3 viewPosition,
+            Vector3 viewScale)
+        {
+            if (asset == null)
+            {
+                return false;
+            }
+
+            var hasNodeChanges = nodePositions != null && nodePositions.Count > 0;
+            if (!hasNodeChanges && !hasViewState)
+            {
+                return false;
+            }
+
+            var metadata = GetOrCreate(asset);
+            if (metadata == null)
+            {
+                return false;
+            }
+
+            var changed = false;
+            if (hasNodeChanges)
+            {
+                for (var i = 0; i < nodePositions.Count; i++)
+                {
+                    var change = nodePositions[i];
+                    if (string.IsNullOrWhiteSpace(change.EditorGuid))
+                    {
+                        continue;
+                    }
+
+                    var node = GetOrCreateNode(metadata, change.EditorGuid);
+                    if (!NearlyEqual(node.Position, change.Position) ||
+                        !string.Equals(node.LastKnownSentenceId, change.SentenceId, StringComparison.Ordinal))
+                    {
+                        node.Position = change.Position;
+                        node.LastKnownSentenceId = change.SentenceId;
+                        changed = true;
+                    }
+                }
+            }
+
+            if (hasViewState)
+            {
+                metadata.ViewState ??= new DialogueGraphViewState();
+                viewScale.z = 1f;
+                if (!NearlyEqual(metadata.ViewState.Position, viewPosition) ||
+                    !NearlyEqual(metadata.ViewState.Scale, viewScale))
+                {
+                    metadata.ViewState.Position = viewPosition;
+                    metadata.ViewState.Scale = viewScale;
+                    changed = true;
+                }
+            }
+
+            if (changed)
+            {
+                SaveMetadata(metadata);
+            }
+
+            return changed;
         }
 
         private static DialogueGraphNodeMetadata GetOrCreateNode(DialogueAssetEditorMetadata metadata, string editorGuid)

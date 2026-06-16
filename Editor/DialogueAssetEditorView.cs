@@ -8,7 +8,7 @@ using UnityEngine.UIElements;
 
 namespace NiumaGal.Editor
 {
-    // TODO(Phase 4): Replace Graph Workspace placeholder with DialogueGraphWorkspace.
+    // TODO(Phase 5): Replace Play Mode Simulator placeholder with DialogueEditorSimulator.
     public sealed class DialogueAssetEditorView
     {
         private readonly DialogueAssetEditorContext context;
@@ -22,6 +22,7 @@ namespace NiumaGal.Editor
         private VisualElement detailPanel;
         private DialogueSentenceListView sentenceListView;
         private DialogueSentenceDetailView sentenceDetailView;
+        private DialogueGraphWorkspace graphWorkspace;
         private DialogueSpeakerEditorHelper speakerEditorHelper;
         private DialogueValidationReport validationReport;
 
@@ -84,12 +85,13 @@ namespace NiumaGal.Editor
             }
 
             context.SerializedObject.UpdateIfRequiredOrScript();
-            // Phase 3 rebuilds the sentence list snapshot and delegates list/detail rendering to subviews.
-            // Later phases extend this into validation caches, search summary caches and graph caches.
+            // Phase 4 rebuilds the sentence list snapshot, validation report and embedded graph.
+            // Later phases extend this into search summary caches and simulator state.
             // TODO(Phase 6+): Structural operations currently trigger ListView.Rebuild(). This is fine
             // for short dialogues, but large assets should use cached indexes and incremental refreshes.
             RefreshSentenceItems();
             RunValidation(false);
+            graphWorkspace?.Refresh(validationReport?.Graph ?? DialogueValidationService.BuildGraph(context.Asset));
         }
 
         private void BuildToolbar(VisualElement parent)
@@ -143,6 +145,16 @@ namespace NiumaGal.Editor
                 text = "Open Graph Preview"
             };
 
+            var rearrangeButton = new ToolbarButton(RearrangeGraph)
+            {
+                text = "Rearrange"
+            };
+
+            var cleanMetadataButton = new ToolbarButton(CleanGraphMetadata)
+            {
+                text = "Clean Metadata"
+            };
+
             var rebuildButton = new ToolbarButton(RebuildIndex)
             {
                 text = "Rebuild Index"
@@ -154,6 +166,8 @@ namespace NiumaGal.Editor
             toolbar.Add(validateButton);
             toolbar.Add(focusStartButton);
             toolbar.Add(graphButton);
+            toolbar.Add(rearrangeButton);
+            toolbar.Add(cleanMetadataButton);
             toolbar.Add(rebuildButton);
             parent.Add(toolbar);
         }
@@ -357,6 +371,59 @@ namespace NiumaGal.Editor
             DialogueGraphPreviewWindow.Open(context.Asset);
         }
 
+        private void RearrangeGraph()
+        {
+            if (graphWorkspace == null)
+            {
+                Debug.LogWarning("[NiumaGalEditor] Graph Workspace is not ready. Rearrange skipped.");
+                return;
+            }
+
+            if (!EditorUtility.DisplayDialog(
+                "Rearrange Dialogue Graph",
+                "Rearrange 会覆盖当前手动摆放的节点位置，并写入该 DialogueAsset 的 Graph Metadata。是否继续？",
+                "Rearrange",
+                "Cancel"))
+            {
+                return;
+            }
+
+            graphWorkspace.Rearrange();
+        }
+
+        private void CleanGraphMetadata()
+        {
+            if (context.Asset == null)
+            {
+                Debug.LogWarning("[NiumaGalEditor] No DialogueAsset selected. Metadata cleanup skipped.");
+                return;
+            }
+
+            var metadata = DialogueAssetEditorMetadataStore.Load(context.Asset);
+            var orphanCount = DialogueAssetEditorMetadataStore.GetOrphanNodes(context.Asset, metadata).Length;
+            if (orphanCount <= 0)
+            {
+                return;
+            }
+
+            if (!EditorUtility.DisplayDialog(
+                "Clean Dialogue Graph Metadata",
+                $"将删除 {orphanCount} 条已经找不到对应句子的 Graph Metadata。是否继续？",
+                "Clean",
+                "Cancel"))
+            {
+                return;
+            }
+
+            var removed = graphWorkspace?.CleanMetadata() ?? DialogueAssetEditorMetadataStore.CleanOrphanNodes(context.Asset);
+            if (removed > 0)
+            {
+                Debug.Log($"[NiumaGalEditor] Clean Metadata removed {removed} orphan graph nodes.");
+            }
+
+            RebuildIndex();
+        }
+
         private void BuildEditorBody(VisualElement parent)
         {
             var mainArea = new VisualElement
@@ -386,7 +453,7 @@ namespace NiumaGal.Editor
                 () => MoveSelectedSentence(1));
             body.Add(sentenceListView.Build());
 
-            body.Add(BuildGraphWorkspacePlaceholder());
+            body.Add(BuildGraphWorkspace());
 
             sentenceDetailView = new DialogueSentenceDetailView(context, speakerEditorHelper, RebuildIndex);
             detailPanel = sentenceDetailView.Build();
@@ -397,36 +464,32 @@ namespace NiumaGal.Editor
             parent.Add(mainArea);
         }
 
-        private VisualElement BuildGraphWorkspacePlaceholder()
+        private VisualElement BuildGraphWorkspace()
         {
-            var container = new VisualElement
+            try
             {
-                name = "DialogueGraphWorkspacePlaceholder"
-            };
-            container.style.flexGrow = 1f;
-            container.style.minWidth = 420f;
-            container.style.marginRight = 8f;
-            container.style.paddingLeft = 8f;
-            container.style.paddingRight = 8f;
-            container.style.paddingTop = 8f;
-            container.style.paddingBottom = 8f;
-            container.style.borderLeftWidth = 1f;
-            container.style.borderRightWidth = 1f;
-            container.style.borderTopWidth = 1f;
-            container.style.borderBottomWidth = 1f;
-            container.style.borderLeftColor = new Color(0.3f, 0.3f, 0.3f);
-            container.style.borderRightColor = new Color(0.3f, 0.3f, 0.3f);
-            container.style.borderTopColor = new Color(0.3f, 0.3f, 0.3f);
-            container.style.borderBottomColor = new Color(0.3f, 0.3f, 0.3f);
-
-            var title = new Label("Graph Workspace")
+                graphWorkspace = new DialogueGraphWorkspace(context.Asset, HandleGraphSentenceSelected);
+                return graphWorkspace.Build();
+            }
+            catch (Exception ex)
             {
-                name = "DialogueGraphWorkspaceTitle"
-            };
-            title.style.unityFontStyleAndWeight = FontStyle.Bold;
-            container.Add(title);
-            container.Add(new HelpBox("阶段 3 只预留 Graph 主工作区容器。节点渲染、拖拽、Rearrange 和 Metadata 写入将在阶段 4 接入。", HelpBoxMessageType.Info));
-            return container;
+                graphWorkspace = null;
+                var container = new VisualElement
+                {
+                    name = "DialogueGraphWorkspaceFallback"
+                };
+                container.style.flexGrow = 1f;
+                container.style.minWidth = 420f;
+                container.style.marginRight = 8f;
+                container.style.paddingLeft = 8f;
+                container.style.paddingRight = 8f;
+                container.style.paddingTop = 8f;
+                container.style.paddingBottom = 8f;
+                container.Add(new HelpBox(
+                    $"GraphView 当前不可用，已降级为左侧列表 + 右侧详情编辑。原因：{ex.GetType().Name}: {ex.Message}",
+                    HelpBoxMessageType.Warning));
+                return container;
+            }
         }
 
         private VisualElement BuildSimulatorPlaceholder()
@@ -472,8 +535,21 @@ namespace NiumaGal.Editor
         {
             var originalIndex = selected?.OriginalIndex ?? -1;
             DialogueEditorAudioPreview.Stop();
+            SelectSentence(originalIndex);
+        }
+
+        private void HandleGraphSentenceSelected(int originalIndex)
+        {
+            DialogueEditorAudioPreview.Stop();
+            SelectSentence(originalIndex);
+        }
+
+        private void SelectSentence(int originalIndex)
+        {
             session.SetSelectedSentence(context.Asset, originalIndex);
+            UpdateListSelection(originalIndex);
             RebuildDetails(originalIndex);
+            graphWorkspace?.SelectSentence(originalIndex);
             UpdateCommandState();
         }
 
@@ -508,21 +584,42 @@ namespace NiumaGal.Editor
             {
                 sentenceListView?.UpdateSelectionInfo(null);
                 RebuildDetails(-1);
+                graphWorkspace?.SelectSentence(-1);
                 return;
             }
 
             var filteredIndex = sentenceItems.FindIndex(item => item.OriginalIndex == session.SelectedSentenceIndex);
             if (filteredIndex >= 0)
             {
-                sentenceListView.SetSelectionWithoutNotify(filteredIndex);
-                sentenceListView.UpdateSelectionInfo(sentenceItems[filteredIndex]);
+                UpdateListSelection(session.SelectedSentenceIndex);
                 RebuildDetails(session.SelectedSentenceIndex);
+                graphWorkspace?.SelectSentence(session.SelectedSentenceIndex);
                 return;
             }
 
             sentenceListView.ClearSelection();
             sentenceListView.UpdateSelectionInfo(null);
             RebuildDetails(-1);
+            graphWorkspace?.SelectSentence(session.SelectedSentenceIndex);
+        }
+
+        private void UpdateListSelection(int originalIndex)
+        {
+            if (sentenceListView == null)
+            {
+                return;
+            }
+
+            var filteredIndex = sentenceItems.FindIndex(item => item.OriginalIndex == originalIndex);
+            if (filteredIndex < 0)
+            {
+                sentenceListView.ClearSelection();
+                sentenceListView.UpdateSelectionInfo(null);
+                return;
+            }
+
+            sentenceListView.SetSelectionWithoutNotify(filteredIndex);
+            sentenceListView.UpdateSelectionInfo(sentenceItems[filteredIndex]);
         }
 
         private void RebuildDetails(int originalIndex)
