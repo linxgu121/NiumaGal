@@ -59,26 +59,26 @@ namespace NiumaGal.Editor
             var sentencesProperty = context.SerializedObject?.FindProperty("Sentences");
             if (sentencesProperty == null || originalIndex < 0 || originalIndex >= sentencesProperty.arraySize)
             {
-                scrollView.Add(new HelpBox("Select a sentence to edit details.", HelpBoxMessageType.Info));
+                scrollView.Add(new HelpBox("请选择左侧句子或 Graph 节点后编辑详情。", HelpBoxMessageType.Info));
                 return;
             }
 
             var sentenceProperty = sentencesProperty.GetArrayElementAtIndex(originalIndex);
-            var title = new Label($"Sentence #{originalIndex}")
+            var title = new Label($"句子 #{originalIndex}")
             {
                 name = "DialogueSentenceDetailTitle"
             };
             title.style.unityFontStyleAndWeight = FontStyle.Bold;
             scrollView.Add(title);
 
-            DialogueSerializedPropertyUtility.AddRelativeProperty(scrollView, sentenceProperty, "SentenceId", "Sentence Id");
+            DialogueSerializedPropertyUtility.AddRelativeProperty(scrollView, sentenceProperty, "SentenceId", "句子 ID");
             speakerEditorHelper.AddSpeakerEditor(scrollView, sentenceProperty);
             AddTextEditor(sentenceProperty);
             AddVoiceEditor(sentenceProperty);
-            DialogueSerializedPropertyUtility.AddRelativeProperty(scrollView, sentenceProperty, "NarrativeCategory", "Narrative Category", ScheduleDeferredRefresh);
-            conditionCardBuilder.AddCards(scrollView, sentenceProperty.FindPropertyRelative("Conditions"), "Sentence Conditions", "进入本句前需要满足的条件。不满足时本句不会被播放。");
-            actionCardBuilder.AddCards(scrollView, sentenceProperty.FindPropertyRelative("EnterActions"), "Enter Actions", "进入本句并开始播放时执行。不要把离开本句后的行为填在这里。");
-            actionCardBuilder.AddCards(scrollView, sentenceProperty.FindPropertyRelative("ExitActions"), "Exit Actions", "本句完整推进离开时执行。Choice 被点击后会先执行 Choice Actions，再执行这里。");
+            DialogueSerializedPropertyUtility.AddRelativeProperty(scrollView, sentenceProperty, "NarrativeCategory", "叙事分类", ScheduleDeferredRefresh);
+            conditionCardBuilder.AddCards(scrollView, sentenceProperty.FindPropertyRelative("Conditions"), "句子条件", "进入本句前需要满足的条件。不满足时，本句不会被模拟播放。");
+            actionCardBuilder.AddCards(scrollView, sentenceProperty.FindPropertyRelative("EnterActions"), "进入本句行为", "进入本句并开始播放时执行。不要把离开本句后的行为填在这里。");
+            actionCardBuilder.AddCards(scrollView, sentenceProperty.FindPropertyRelative("ExitActions"), "离开本句行为", "本句完整推进离开时执行。Choice 被点击后会先执行 Choice Actions，再执行这里。");
             choiceCardBuilder.AddCards(scrollView, sentenceProperty.FindPropertyRelative("Choices"));
 
             scrollView.Bind(context.SerializedObject);
@@ -92,7 +92,7 @@ namespace NiumaGal.Editor
                 return;
             }
 
-            var textField = new TextField("Text")
+            var textField = new TextField("文本")
             {
                 name = "DialogueSentenceTextField",
                 multiline = true,
@@ -137,7 +137,7 @@ namespace NiumaGal.Editor
             row.style.alignItems = Align.Center;
             row.style.marginBottom = 6f;
 
-            var clipField = new ObjectField("Voice Clip")
+            var clipField = new ObjectField("语音片段")
             {
                 name = "DialogueVoiceClipField",
                 objectType = typeof(AudioClip),
@@ -148,17 +148,17 @@ namespace NiumaGal.Editor
 
             var playButton = new Button
             {
-                text = "Preview"
+                text = "试听"
             };
             var stopButton = new Button(DialogueEditorAudioPreview.Stop)
             {
-                text = "Stop"
+                text = "停止"
             };
             playButton.clicked += () =>
             {
                 if (!DialogueEditorAudioPreview.Play(clipField.value as AudioClip, out var error))
                 {
-                    Debug.LogWarning($"[NiumaGalEditor] Voice 试听失败：{error}");
+                    Debug.LogWarning($"[NiumaGalEditor] 语音试听失败：{error}");
                 }
             };
 

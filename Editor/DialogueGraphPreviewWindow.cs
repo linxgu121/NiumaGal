@@ -19,7 +19,7 @@ namespace NiumaGal.Editor
         public static void Open(DialogueAsset dialogueAsset)
         {
             var window = GetWindow<DialogueGraphPreviewWindow>();
-            window.titleContent = new GUIContent("Dialogue Graph Preview");
+            window.titleContent = new GUIContent("对话图预览");
             if (window.asset != dialogueAsset)
             {
                 window.cachedAsset = null;
@@ -47,16 +47,16 @@ namespace NiumaGal.Editor
             rootVisualElement.style.flexGrow = 1f;
 
             var toolbar = new Toolbar();
-            toolbar.Add(new Label(asset == null ? "No DialogueAsset" : asset.name));
+            toolbar.Add(new Label(asset == null ? "未选择 DialogueAsset" : asset.name));
             toolbar.Add(new ToolbarSpacer());
-            toolbar.Add(new ToolbarButton(() => Rebuild(true)) { text = "Refresh" });
+            toolbar.Add(new ToolbarButton(() => Rebuild(true)) { text = "刷新" });
             rootVisualElement.Add(toolbar);
 
             if (asset == null)
             {
                 cachedAsset = null;
                 cachedSnapshot = null;
-                rootVisualElement.Add(new HelpBox("No DialogueAsset selected. Open the preview from a DialogueAsset editor.", HelpBoxMessageType.Info));
+                rootVisualElement.Add(new HelpBox("未选择 DialogueAsset。请从对话资产编辑器中打开预览。", HelpBoxMessageType.Info));
                 return;
             }
 
@@ -116,11 +116,11 @@ namespace NiumaGal.Editor
                     outputPorts[data.Index] = node.outputContainer.Q<Port>();
                 }
 
-                var endNode = CreateTerminalNode("End", new Vector2(ColumnWidth * 2f, Mathf.Max(RowHeight, nodes.Length * 42f)));
+                var endNode = CreateTerminalNode("结束", new Vector2(ColumnWidth * 2f, Mathf.Max(RowHeight, nodes.Length * 42f)));
                 AddElement(endNode);
                 var endInput = endNode.inputContainer.Q<Port>();
 
-                var unknownNode = CreateTerminalNode("Missing / Unknown", new Vector2(ColumnWidth * 2f, Mathf.Max(RowHeight * 2f, nodes.Length * 42f + RowHeight)));
+                var unknownNode = CreateTerminalNode("缺失 / 未知", new Vector2(ColumnWidth * 2f, Mathf.Max(RowHeight * 2f, nodes.Length * 42f + RowHeight)));
                 AddElement(unknownNode);
                 var unknownInput = unknownNode.inputContainer.Q<Port>();
 
@@ -148,7 +148,7 @@ namespace NiumaGal.Editor
             {
                 var node = new Node
                 {
-                    title = data.IsStart ? $"{data.Title}  [Start]" : data.Title
+                    title = data.IsStart ? $"{data.Title}  [起始]" : data.Title
                 };
 
                 node.SetPosition(new Rect(ResolveNodePosition(data.Index), new Vector2(NodeWidth, NodeHeight)));
@@ -169,7 +169,7 @@ namespace NiumaGal.Editor
 
                 if (!data.IsReachable)
                 {
-                    var warning = new Label("Unreachable");
+                    var warning = new Label("不可达");
                     warning.style.color = new Color(1f, 0.65f, 0.2f);
                     warning.style.marginTop = 4f;
                     node.extensionContainer.Add(warning);
@@ -221,15 +221,15 @@ namespace NiumaGal.Editor
 
             private static string BuildEdgeTooltip(DialogueGraphEdgeData edge)
             {
-                var label = string.IsNullOrWhiteSpace(edge.Label) ? "Edge" : edge.Label;
+                var label = string.IsNullOrWhiteSpace(edge.Label) ? "连线" : edge.Label;
                 if (edge.IsConditional)
                 {
-                    label += " | Conditional";
+                    label += " | 有条件";
                 }
 
                 if (edge.IsUnknown)
                 {
-                    label += " | Missing Target";
+                    label += " | 目标缺失";
                 }
 
                 return label;

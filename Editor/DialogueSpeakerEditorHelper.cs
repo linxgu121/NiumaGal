@@ -25,7 +25,7 @@ namespace NiumaGal.Editor
             var explicitCatalog = settings.GetExplicitSpeakerCatalog(context.Asset);
             var resolvedCatalog = settings.ResolveSpeakerCatalog(context.Asset);
 
-            var field = new ObjectField("Speaker Catalog (Editor)")
+            var field = new ObjectField("说话人清单（编辑器）")
             {
                 name = "DialogueSpeakerCatalogField",
                 objectType = typeof(DialogueSpeakerCatalog),
@@ -62,7 +62,7 @@ namespace NiumaGal.Editor
             var catalog = NiumaGalEditorSettings.instance.ResolveSpeakerCatalog(context.Asset);
             if (catalog == null || catalog.Speakers == null || catalog.Speakers.Length == 0)
             {
-                parent.Add(new PropertyField(speakerProperty, "Speaker"));
+                parent.Add(new PropertyField(speakerProperty, "说话人"));
                 parent.Add(new HelpBox("未配置可用 Speaker Catalog，当前使用字符串输入。", HelpBoxMessageType.Info));
                 return;
             }
@@ -71,7 +71,7 @@ namespace NiumaGal.Editor
             var currentIndex = Mathf.Max(0, choices.IndexOf(speakerProperty.stringValue ?? string.Empty));
             string FormatSpeaker(string key) => FormatSpeakerChoice(catalog, key);
 
-            var popup = new PopupField<string>("Speaker", choices, currentIndex, FormatSpeaker, FormatSpeaker)
+            var popup = new PopupField<string>("说话人", choices, currentIndex, FormatSpeaker, FormatSpeaker)
             {
                 name = "DialogueSpeakerPopup",
                 tooltip = "选择说话人。实际写入 DialogueSentence.Speaker 字符串，不会新增运行时字段。"
@@ -92,7 +92,7 @@ namespace NiumaGal.Editor
             }
             else if (!string.IsNullOrWhiteSpace(speakerProperty.stringValue))
             {
-                parent.Add(new HelpBox($"Speaker '{speakerProperty.stringValue}' 不在当前 Catalog 中。", HelpBoxMessageType.Warning));
+                parent.Add(new HelpBox($"说话人“{speakerProperty.stringValue}”不在当前 Catalog 中。", HelpBoxMessageType.Warning));
             }
         }
 
@@ -128,7 +128,7 @@ namespace NiumaGal.Editor
         {
             if (string.IsNullOrWhiteSpace(speakerKey))
             {
-                return "(Narration / Empty)";
+                return "（旁白 / 留空）";
             }
 
             var speaker = FindSpeaker(catalog, speakerKey);
@@ -192,7 +192,7 @@ namespace NiumaGal.Editor
             preview.Add(swatch);
 
             var displayName = string.IsNullOrWhiteSpace(speaker.DisplayName) ? speaker.SpeakerKey : speaker.DisplayName;
-            preview.Add(new Label($"Speaker Preview: {displayName}"));
+            preview.Add(new Label($"说话人预览：{displayName}"));
 
             if (speaker.PreviewVoice != null)
             {
@@ -200,11 +200,11 @@ namespace NiumaGal.Editor
                 {
                     if (!DialogueEditorAudioPreview.Play(speaker.PreviewVoice, out var error))
                     {
-                        Debug.LogWarning($"[NiumaGalEditor] Speaker Voice 试听失败：{error}");
+                        Debug.LogWarning($"[NiumaGalEditor] Speaker 语音试听失败：{error}");
                     }
                 })
                 {
-                    text = "Preview Voice"
+                    text = "试听语音"
                 };
                 previewButton.SetEnabled(DialogueEditorAudioPreview.IsSupported);
                 previewButton.style.marginLeft = 8f;

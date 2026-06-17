@@ -48,7 +48,7 @@ namespace NiumaGal.Editor
             var foldout = new Foldout
             {
                 name = "DialogueSentenceListFoldout",
-                text = "Sentences",
+                text = "句子列表",
                 value = true
             };
             foldout.style.width = 420f;
@@ -60,11 +60,11 @@ namespace NiumaGal.Editor
             {
                 name = "DialogueSentenceCommandToolbar"
             };
-            buttonRow.Add(new ToolbarButton(onAdd) { text = "Add" });
-            duplicateButton = new ToolbarButton(onDuplicate) { text = "Duplicate" };
-            deleteButton = new ToolbarButton(onDelete) { text = "Delete" };
-            moveUpButton = new ToolbarButton(onMoveUp) { text = "Up" };
-            moveDownButton = new ToolbarButton(onMoveDown) { text = "Down" };
+            buttonRow.Add(new ToolbarButton(onAdd) { text = "新增" });
+            duplicateButton = new ToolbarButton(onDuplicate) { text = "复制" };
+            deleteButton = new ToolbarButton(onDelete) { text = "删除" };
+            moveUpButton = new ToolbarButton(onMoveUp) { text = "上移" };
+            moveDownButton = new ToolbarButton(onMoveDown) { text = "下移" };
             buttonRow.Add(duplicateButton);
             buttonRow.Add(deleteButton);
             buttonRow.Add(moveUpButton);
@@ -133,8 +133,8 @@ namespace NiumaGal.Editor
             }
 
             selectionLabel.text = item == null
-                ? "Selected Sentence: None"
-                : $"Selected Sentence: #{item.OriginalIndex} {item.SentenceId}";
+                ? "当前选中：无"
+                : $"当前选中：#{item.OriginalIndex} {item.SentenceId}";
         }
 
         private static VisualElement MakeItem()

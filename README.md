@@ -468,3 +468,15 @@ CoreScene/BootstrapRoot
 | `Save Controller` | 拖 `NiumaSaveController` | 不建议 | 无法注册存档 Provider |
 
 
+
+## 配置资产粒度基准
+
+NiumaGal 的对话资产不要做成全局大表，按“可独立播放的对话段”拆分。
+
+- `DialogueAsset`：一个对话段、一次对话事件、一个可独立播放的 NPC 对话资产。例如初次见面、任务接取前、任务完成后、日常闲聊应拆成不同资产。
+- 一个 NPC 可以关联多个 `DialogueAsset`，由任务状态、StoryFlag、条件或交互脚本决定播放哪一个。
+- `DialogueSpeakerCatalog`：编辑器说话人清单。小项目可全局一个；大项目可按地区、章节或阵营拆分。
+- `AmbientAsset`：一个环境叙事片段或一组可触发环境文本一个资产。
+- `NiumaGalSO`、`DialogueCoreSO`、`DialogueInputSO`、`DialogueAudioSO` 是系统配置资产，通常全局一套，不按 NPC 拆。
+
+不要把一个 NPC 的所有生命周期对话硬塞进一个超大 `DialogueAsset`；这样会让 Graph、校验和协作维护变得困难。

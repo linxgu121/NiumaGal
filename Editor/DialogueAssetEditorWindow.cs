@@ -22,7 +22,7 @@ namespace NiumaGal.Editor
         public static void OpenWindow()
         {
             var window = GetWindow<DialogueAssetEditorWindow>();
-            window.titleContent = new GUIContent("Dialogue Editor");
+            window.titleContent = new GUIContent("对话编辑器");
             window.Show();
         }
 

@@ -93,7 +93,7 @@ namespace NiumaGal.Editor
             var sentences = asset.Sentences;
             if (sentences == null || sentences.Count == 0)
             {
-                builder.Add(DialogueValidationSeverity.Error, "sentences_empty", "Sentences 为空，对话没有可播放内容。");
+                builder.Add(DialogueValidationSeverity.Error, "sentences_empty", "句子列表为空，对话没有可播放内容。");
                 return builder.Build(graph, 0, 0, 0, 0);
             }
 
@@ -120,7 +120,7 @@ namespace NiumaGal.Editor
                 totalCharacters += plainText.Length;
                 if (string.IsNullOrWhiteSpace(plainText))
                 {
-                    builder.Add(DialogueValidationSeverity.Warning, "text_empty", $"Sentence {i + 1} text is empty.", i);
+                    builder.Add(DialogueValidationSeverity.Warning, "text_empty", $"第 {i + 1} 句文本为空。", i);
                 }
                 else if (plainText.Length > 120)
                 {
@@ -129,7 +129,7 @@ namespace NiumaGal.Editor
 
                 if (sentence.VoiceClip == null)
                 {
-                    builder.Add(DialogueValidationSeverity.Warning, "voice_clip_empty", $"Sentence {i + 1} VoiceClip is empty.", i);
+                    builder.Add(DialogueValidationSeverity.Warning, "voice_clip_empty", $"第 {i + 1} 句未配置 VoiceClip。", i);
                 }
 
                 ValidateSpeaker(sentence, speakerCatalog, warnWhenSpeakerEmpty, i, builder);
@@ -233,7 +233,7 @@ namespace NiumaGal.Editor
 
             if (!sentenceIdToIndex.ContainsKey(startSentenceId))
             {
-                builder.Add(DialogueValidationSeverity.Error, "start_sentence_missing", $"StartSentenceId 指向不存在的句子：{startSentenceId}");
+                builder.Add(DialogueValidationSeverity.Error, "start_sentence_missing", $"起始句 ID 指向不存在的句子：{startSentenceId}");
             }
         }
 
@@ -248,7 +248,7 @@ namespace NiumaGal.Editor
             {
                 if (warnWhenSpeakerEmpty)
                 {
-                    builder.Add(DialogueValidationSeverity.Warning, "speaker_empty", $"Sentence {sentenceIndex + 1} has an empty Speaker. Disable WarnWhenSpeakerEmpty in Gal Editor settings if this is narration.", sentenceIndex);
+                    builder.Add(DialogueValidationSeverity.Warning, "speaker_empty", $"第 {sentenceIndex + 1} 句没有填写说话人。如果这是旁白，可在 Gal Editor 设置中关闭 WarnWhenSpeakerEmpty。", sentenceIndex);
                 }
 
                 return;
@@ -256,7 +256,7 @@ namespace NiumaGal.Editor
 
             if (speakerCatalog == null || speakerCatalog.Speakers == null || speakerCatalog.Speakers.Length == 0)
             {
-                builder.Add(DialogueValidationSeverity.Warning, "speaker_catalog_missing", $"第 {sentenceIndex + 1} 句填写了 Speaker，但当前没有可用 Speaker Catalog。", sentenceIndex);
+                builder.Add(DialogueValidationSeverity.Warning, "speaker_catalog_missing", $"第 {sentenceIndex + 1} 句填写了说话人，但当前没有可用 Speaker Catalog。", sentenceIndex);
                 return;
             }
 
@@ -269,7 +269,7 @@ namespace NiumaGal.Editor
                 }
             }
 
-            builder.Add(DialogueValidationSeverity.Warning, "speaker_missing", $"Speaker 不在当前 Catalog 中：{sentence.Speaker}", sentenceIndex);
+            builder.Add(DialogueValidationSeverity.Warning, "speaker_missing", $"说话人不在当前 Catalog 中：{sentence.Speaker}", sentenceIndex);
         }
 
         private static void ValidateEditorMetadata(DialogueSentence sentence, int sentenceIndex, ReportBuilder builder)
@@ -281,12 +281,12 @@ namespace NiumaGal.Editor
 
             if (string.IsNullOrWhiteSpace(sentence.EditorGuid))
             {
-                builder.Add(DialogueValidationSeverity.Warning, "editor_guid_missing", $"Sentence {sentenceIndex + 1} 缺少 EditorGuid。打开专用编辑器时会自动补齐。", sentenceIndex);
+                builder.Add(DialogueValidationSeverity.Warning, "editor_guid_missing", $"第 {sentenceIndex + 1} 句缺少 EditorGuid。打开专用编辑器时会自动补齐。", sentenceIndex);
             }
 
             if (sentence.NarrativeCategory == DialogueNarrativeCategory.None)
             {
-                builder.Add(DialogueValidationSeverity.Info, "narrative_category_none", $"Sentence {sentenceIndex + 1} 未设置叙事分类。None 是合法默认值，不影响运行。", sentenceIndex);
+                builder.Add(DialogueValidationSeverity.Info, "narrative_category_none", $"第 {sentenceIndex + 1} 句未设置叙事分类。None 是合法默认值，不影响运行。", sentenceIndex);
             }
         }
 
@@ -307,14 +307,14 @@ namespace NiumaGal.Editor
             builder.Add(
                 DialogueValidationSeverity.Warning,
                 "graph_metadata_orphan",
-                $"Graph Metadata contains {orphanNodes.Length} orphan node record(s): {BuildOrphanNodeSummary(orphanNodes)}. Use Clean Metadata after confirming the deleted sentences do not need their node positions restored.");
+                $"Graph Metadata 中有 {orphanNodes.Length} 条孤儿节点记录：{BuildOrphanNodeSummary(orphanNodes)}。确认已删除句子不需要恢复节点位置后，可点击“清理布局”。");
         }
 
         private static string BuildOrphanNodeSummary(DialogueGraphNodeMetadata[] orphanNodes)
         {
             if (orphanNodes == null || orphanNodes.Length == 0)
             {
-                return "<none>";
+                return "<无>";
             }
 
             const int maxShown = 5;
@@ -334,10 +334,10 @@ namespace NiumaGal.Editor
 
             if (orphanNodes.Length > maxShown)
             {
-                labels.Add($"+{orphanNodes.Length - maxShown} more");
+                labels.Add($"还有 {orphanNodes.Length - maxShown} 条");
             }
 
-            return labels.Count == 0 ? "<unknown>" : string.Join(", ", labels);
+            return labels.Count == 0 ? "<未知>" : string.Join(", ", labels);
         }
 
         private static void ValidateChoices(DialogueChoiceData[] choices, Dictionary<string, int> sentenceIdToIndex, int sentenceIndex, ReportBuilder builder)
@@ -386,18 +386,18 @@ namespace NiumaGal.Editor
                 case DialogueChoiceBehavior.JumpToSentence:
                     if (string.IsNullOrWhiteSpace(choice.NextSentenceId))
                     {
-                        builder.Add(DialogueValidationSeverity.Error, "choice_jump_target_empty", "JumpToSentence 选项缺少 NextSentenceId。", sentenceIndex, choiceIndex);
+                        builder.Add(DialogueValidationSeverity.Error, "choice_jump_target_empty", "跳转选项缺少目标句 ID（NextSentenceId）。", sentenceIndex, choiceIndex);
                     }
                     else if (!sentenceIdToIndex.ContainsKey(choice.NextSentenceId))
                     {
-                        builder.Add(DialogueValidationSeverity.Error, "choice_jump_target_missing", $"JumpToSentence 目标不存在：{choice.NextSentenceId}", sentenceIndex, choiceIndex);
+                        builder.Add(DialogueValidationSeverity.Error, "choice_jump_target_missing", $"跳转选项的目标句不存在：{choice.NextSentenceId}", sentenceIndex, choiceIndex);
                     }
                     break;
 
                 case DialogueChoiceBehavior.Custom:
                     if (!string.IsNullOrWhiteSpace(choice.NextSentenceId) && !sentenceIdToIndex.ContainsKey(choice.NextSentenceId))
                     {
-                        builder.Add(DialogueValidationSeverity.Error, "choice_custom_target_missing", $"Custom 选项的 NextSentenceId 不存在：{choice.NextSentenceId}", sentenceIndex, choiceIndex);
+                        builder.Add(DialogueValidationSeverity.Error, "choice_custom_target_missing", $"自定义选项的目标句不存在：{choice.NextSentenceId}", sentenceIndex, choiceIndex);
                     }
                     break;
             }
@@ -415,23 +415,24 @@ namespace NiumaGal.Editor
                 return;
             }
 
+            var displayScope = LocalizeScope(scope, sentenceIndex, choiceIndex);
             for (var i = 0; i < actions.Length; i++)
             {
                 var action = actions[i];
                 if (action == null)
                 {
-                    builder.Add(DialogueValidationSeverity.Error, "action_null", $"{scope} 的第 {i + 1} 个 Action 为空。", sentenceIndex, choiceIndex, scope);
+                    builder.Add(DialogueValidationSeverity.Error, "action_null", $"{displayScope} 的第 {i + 1} 个行为为空。", sentenceIndex, choiceIndex, scope);
                     continue;
                 }
 
                 if (action.Type == DialogueActionType.None && HasKeyParameters(action))
                 {
-                    builder.Add(DialogueValidationSeverity.Warning, "action_none_has_params", $"{scope} 的第 {i + 1} 个 Action 类型为 None，但填写了参数。", sentenceIndex, choiceIndex, scope);
+                    builder.Add(DialogueValidationSeverity.Warning, "action_none_has_params", $"{displayScope} 的第 {i + 1} 个行为类型为 None，但填写了参数。", sentenceIndex, choiceIndex, scope);
                 }
 
                 if (RequiresTargetId(action.Type) && string.IsNullOrWhiteSpace(action.TargetId))
                 {
-                    builder.Add(DialogueValidationSeverity.Error, "action_target_missing", $"{scope} 的第 {i + 1} 个 {action.Type} 缺少 TargetId。", sentenceIndex, choiceIndex, scope);
+                    builder.Add(DialogueValidationSeverity.Error, "action_target_missing", $"{displayScope} 的第 {i + 1} 个 {action.Type} 缺少 TargetId。", sentenceIndex, choiceIndex, scope);
                 }
             }
         }
@@ -443,25 +444,74 @@ namespace NiumaGal.Editor
                 return;
             }
 
+            var displayScope = LocalizeScope(scope, sentenceIndex, choiceIndex);
             for (var i = 0; i < conditions.Length; i++)
             {
                 var condition = conditions[i];
                 if (condition == null)
                 {
-                    builder.Add(DialogueValidationSeverity.Error, "condition_null", $"{scope} 的第 {i + 1} 个 Condition 为空。", sentenceIndex, choiceIndex, scope);
+                    builder.Add(DialogueValidationSeverity.Error, "condition_null", $"{displayScope} 的第 {i + 1} 个条件为空。", sentenceIndex, choiceIndex, scope);
                     continue;
                 }
 
                 if (condition.Type == DialogueConditionType.None && HasKeyParameters(condition))
                 {
-                    builder.Add(DialogueValidationSeverity.Warning, "condition_none_has_params", $"{scope} 的第 {i + 1} 个 Condition 类型为 None，但填写了参数。", sentenceIndex, choiceIndex, scope);
+                    builder.Add(DialogueValidationSeverity.Warning, "condition_none_has_params", $"{displayScope} 的第 {i + 1} 个条件类型为 None，但填写了参数。", sentenceIndex, choiceIndex, scope);
                 }
 
                 if (RequiresTargetId(condition.Type) && string.IsNullOrWhiteSpace(condition.TargetId))
                 {
-                    builder.Add(DialogueValidationSeverity.Warning, "condition_target_missing", $"{scope} 的第 {i + 1} 个 {condition.Type} 可能缺少 TargetId。", sentenceIndex, choiceIndex, scope);
+                    builder.Add(DialogueValidationSeverity.Warning, "condition_target_missing", $"{displayScope} 的第 {i + 1} 个 {condition.Type} 可能缺少 TargetId。", sentenceIndex, choiceIndex, scope);
                 }
             }
+        }
+
+        private static string LocalizeScope(string scope, int sentenceIndex, int choiceIndex)
+        {
+            var sentencePrefix = sentenceIndex >= 0 ? $"第 {sentenceIndex + 1} 句" : "对话资产";
+            var choicePrefix = choiceIndex >= 0 ? $"的第 {choiceIndex + 1} 个选项" : string.Empty;
+
+            if (string.Equals(scope, "OnStartActions", StringComparison.Ordinal))
+            {
+                return "对话开始行为";
+            }
+
+            if (string.Equals(scope, "OnCompleteActions", StringComparison.Ordinal))
+            {
+                return "正常结束行为";
+            }
+
+            if (string.Equals(scope, "OnAbortActions", StringComparison.Ordinal))
+            {
+                return "中断关闭行为";
+            }
+
+            if (!string.IsNullOrWhiteSpace(scope) && scope.Contains(".EnterActions"))
+            {
+                return $"{sentencePrefix}的进入本句行为";
+            }
+
+            if (!string.IsNullOrWhiteSpace(scope) && scope.Contains(".ExitActions"))
+            {
+                return $"{sentencePrefix}的离开本句行为";
+            }
+
+            if (!string.IsNullOrWhiteSpace(scope) && scope.Contains(".Choices") && scope.Contains(".Actions"))
+            {
+                return $"{sentencePrefix}{choicePrefix}的选项行为";
+            }
+
+            if (!string.IsNullOrWhiteSpace(scope) && scope.Contains(".Choices") && scope.Contains(".Conditions"))
+            {
+                return $"{sentencePrefix}{choicePrefix}的选项条件";
+            }
+
+            if (!string.IsNullOrWhiteSpace(scope) && scope.Contains(".Conditions"))
+            {
+                return $"{sentencePrefix}的句子条件";
+            }
+
+            return string.IsNullOrWhiteSpace(scope) ? sentencePrefix : scope;
         }
 
         private static bool RequiresTargetId(DialogueActionType type)
@@ -539,7 +589,7 @@ namespace NiumaGal.Editor
                 }
 
                 var label = string.IsNullOrWhiteSpace(choice.ChoiceId)
-                    ? $"Choice {i + 1}"
+                    ? $"选项 {i + 1}"
                     : choice.ChoiceId;
                 var conditional = choice.Conditions != null && choice.Conditions.Length > 0;
 
@@ -560,22 +610,22 @@ namespace NiumaGal.Editor
                     case DialogueChoiceBehavior.Custom:
                         if (string.IsNullOrWhiteSpace(choice.NextSentenceId))
                         {
-                            edges.Add(new DialogueGraphEdgeData { FromIndex = index, Label = $"{label} (Custom / Unknown)", IsConditional = conditional, IsUnknown = true });
+                            edges.Add(new DialogueGraphEdgeData { FromIndex = index, Label = $"{label}（自定义 / 未知）", IsConditional = conditional, IsUnknown = true });
                         }
                         else
                         {
-                            AddTargetEdge(index, choice.NextSentenceId, idToIndex, $"{label} (Custom)", conditional, edges);
+                            AddTargetEdge(index, choice.NextSentenceId, idToIndex, $"{label}（自定义）", conditional, edges);
                         }
                         break;
 
                     default:
-                        edges.Add(new DialogueGraphEdgeData { FromIndex = index, Label = $"{label} (Unknown)", IsConditional = conditional, IsUnknown = true });
+                        edges.Add(new DialogueGraphEdgeData { FromIndex = index, Label = $"{label}（未知）", IsConditional = conditional, IsUnknown = true });
                         break;
                 }
             }
         }
 
-        private static void AddLinearEdge(IList<DialogueSentence> sentences, int index, List<DialogueGraphEdgeData> edges, string label = "Continue", bool conditional = false)
+        private static void AddLinearEdge(IList<DialogueSentence> sentences, int index, List<DialogueGraphEdgeData> edges, string label = "继续", bool conditional = false)
         {
             if (index + 1 < sentences.Count)
             {
@@ -594,7 +644,7 @@ namespace NiumaGal.Editor
                 return;
             }
 
-            edges.Add(new DialogueGraphEdgeData { FromIndex = fromIndex, Label = $"{label} -> Missing", IsConditional = conditional, IsUnknown = true });
+            edges.Add(new DialogueGraphEdgeData { FromIndex = fromIndex, Label = $"{label} -> 缺失", IsConditional = conditional, IsUnknown = true });
         }
 
         private static void MarkReachable(DialogueGraphNodeData[] nodes, List<DialogueGraphEdgeData> edges, int startIndex)
@@ -672,7 +722,7 @@ namespace NiumaGal.Editor
                 return $"{index + 1}. <null>";
             }
 
-            var id = string.IsNullOrWhiteSpace(sentence.SentenceId) ? "<empty id>" : sentence.SentenceId;
+            var id = string.IsNullOrWhiteSpace(sentence.SentenceId) ? "<空 ID>" : sentence.SentenceId;
             return $"{index + 1}. {id}";
         }
 

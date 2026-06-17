@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NiumaGal.Dialogue.Data;
+using NiumaGal.Enum;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
@@ -207,11 +208,11 @@ namespace NiumaGal.Editor
 
                 var terminalX = maxNodePosition.x + ColumnWidth;
                 var terminalStartY = Mathf.Max(0f, maxNodePosition.y - RowHeight * 0.5f);
-                var endNode = CreateTerminalNode("End", new Vector2(terminalX, terminalStartY));
+                var endNode = CreateTerminalNode("结束", new Vector2(terminalX, terminalStartY));
                 graphView.AddElement(endNode);
                 var endInput = endNode.inputContainer.Q<Port>();
 
-                var unknownNode = CreateTerminalNode("Missing / Unknown", new Vector2(terminalX, terminalStartY + RowHeight));
+                var unknownNode = CreateTerminalNode("缺失 / 未知", new Vector2(terminalX, terminalStartY + RowHeight));
                 graphView.AddElement(unknownNode);
                 var unknownInput = unknownNode.inputContainer.Q<Port>();
 
@@ -249,7 +250,7 @@ namespace NiumaGal.Editor
         {
             var node = new DialogueGraphNode(data)
             {
-                title = data.IsStart ? $"{data.Title}  [Start]" : data.Title
+                title = data.IsStart ? $"{data.Title}  [起始]" : data.Title
             };
             node.SetPosition(new Rect(position, new Vector2(NodeWidth, NodeHeight)));
             node.capabilities &= ~Capabilities.Deletable;
@@ -285,7 +286,7 @@ namespace NiumaGal.Editor
             summary.style.marginTop = 4f;
             node.extensionContainer.Add(summary);
 
-            var category = new Label(data.NarrativeCategory.ToString())
+            var category = new Label(LocalizeNarrativeCategory(data.NarrativeCategory))
             {
                 name = "DialogueGraphNodeCategory"
             };
@@ -295,7 +296,7 @@ namespace NiumaGal.Editor
 
             if (!data.IsReachable)
             {
-                var warning = new Label("Unreachable")
+                var warning = new Label("不可达")
                 {
                     name = "DialogueGraphNodeWarning"
                 };
@@ -529,18 +530,31 @@ namespace NiumaGal.Editor
 
         private static string BuildEdgeTooltip(DialogueGraphEdgeData edge)
         {
-            var label = string.IsNullOrWhiteSpace(edge.Label) ? "Edge" : edge.Label;
+            var label = string.IsNullOrWhiteSpace(edge.Label) ? "连线" : edge.Label;
             if (edge.IsConditional)
             {
-                label += " | Conditional";
+                label += " | 有条件";
             }
 
             if (edge.IsUnknown)
             {
-                label += " | Missing Target";
+                label += " | 目标缺失";
             }
 
             return label;
+        }
+
+        private static string LocalizeNarrativeCategory(DialogueNarrativeCategory category)
+        {
+            return category switch
+            {
+                DialogueNarrativeCategory.Main => "主线",
+                DialogueNarrativeCategory.Branch => "支线",
+                DialogueNarrativeCategory.FamilyLegend => "家族传说",
+                DialogueNarrativeCategory.Daily => "日常",
+                DialogueNarrativeCategory.Custom => "自定义",
+                _ => "未分类"
+            };
         }
 
         private sealed class DialogueGraphNode : Node

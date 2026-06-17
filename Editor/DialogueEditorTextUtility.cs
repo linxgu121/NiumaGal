@@ -15,7 +15,7 @@ namespace NiumaGal.Editor
             var firstLine = plain.Split('\n')[0].Trim();
             if (string.IsNullOrEmpty(firstLine))
             {
-                return "<empty text>";
+                return "<空文本>";
             }
 
             return firstLine.Length <= maxLength
@@ -41,8 +41,8 @@ namespace NiumaGal.Editor
 
             var visibleCount = StripRichTextTags(text).Length;
             var readSeconds = Mathf.CeilToInt(visibleCount / 5f);
-            var level = visibleCount <= 60 ? "Normal" : visibleCount <= 120 ? "Long" : "Too Long";
-            label.text = $"Characters: {visibleCount} | Read: {readSeconds}s | Length: {level}";
+            var level = visibleCount <= 60 ? "正常" : visibleCount <= 120 ? "偏长" : "过长";
+            label.text = $"字数：{visibleCount} | 预计阅读：{readSeconds} 秒 | 长度：{level}";
         }
 
         public static string StripRichTextTags(string text)

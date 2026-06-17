@@ -122,7 +122,7 @@ namespace NiumaGal.Editor
             fullText = string.Empty;
             visibleCharacters = 0f;
             DialogueEditorAudioPreview.Stop();
-            Log("Simulator stopped.");
+            Log("模拟器已停止。");
             RenderCurrentSentence();
             UpdateStateLabels();
         }
@@ -136,26 +136,26 @@ namespace NiumaGal.Editor
 
             playButton = new ToolbarButton(Play)
             {
-                text = "Play"
+                text = "播放"
             };
             pauseButton = new ToolbarButton(TogglePause)
             {
-                text = "Pause"
+                text = "暂停"
             };
             stopButton = new ToolbarButton(Stop)
             {
-                text = "Stop"
+                text = "停止"
             };
             skipButton = new ToolbarButton(SkipTypewriter)
             {
-                text = "Skip Typewriter"
+                text = "跳过打字机"
             };
             advanceButton = new ToolbarButton(Advance)
             {
-                text = "Advance"
+                text = "继续"
             };
 
-            conditionModeField = new EnumField("Conditions", conditionMode)
+            conditionModeField = new EnumField("条件模拟", conditionMode)
             {
                 name = "DialogueSimulatorConditionMode"
             };
@@ -167,7 +167,7 @@ namespace NiumaGal.Editor
                 RenderCurrentSentence();
             });
 
-            manualConditionToggle = new Toggle("Manual Pass")
+            manualConditionToggle = new Toggle("手动通过")
             {
                 value = true
             };
@@ -206,12 +206,12 @@ namespace NiumaGal.Editor
             linePanel.style.flexGrow = 1f;
             linePanel.style.marginRight = 8f;
 
-            speakerLabel = new Label("Speaker")
+            speakerLabel = new Label("说话人")
             {
                 name = "DialogueSimulatorSpeaker"
             };
             speakerLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            textLabel = new Label("Click Play to preview dialogue locally.")
+            textLabel = new Label("点击“播放”在编辑器内预览对话。")
             {
                 name = "DialogueSimulatorText"
             };
@@ -249,7 +249,7 @@ namespace NiumaGal.Editor
         {
             if (asset == null)
             {
-                Log("No DialogueAsset selected.");
+                Log("未选择 DialogueAsset。");
                 return;
             }
 
@@ -261,7 +261,7 @@ namespace NiumaGal.Editor
             var startIndex = ResolveStartIndex();
             if (startIndex < 0)
             {
-                Log("No playable sentence found.");
+                Log("没有可播放的句子。");
                 Stop();
                 return;
             }
@@ -280,7 +280,7 @@ namespace NiumaGal.Editor
             }
 
             isPaused = !isPaused;
-            pauseButton.text = isPaused ? "Resume" : "Pause";
+            pauseButton.text = isPaused ? "继续" : "暂停";
             UpdateStateLabels();
         }
 
@@ -319,7 +319,7 @@ namespace NiumaGal.Editor
 
             if (sentence.Choices != null && sentence.Choices.Length > 0)
             {
-                Log("Waiting for choice.");
+                Log("等待选择。");
                 return;
             }
 
@@ -372,23 +372,23 @@ namespace NiumaGal.Editor
 
             if (!EvaluateConditions(sentence.Conditions))
             {
-                Log($"Sentence #{index + 1} conditions failed. Simulator stopped before executing side effects.");
+                Log($"句子 #{index + 1} 条件未满足。模拟器已停止，未执行任何真实副作用。");
                 isPlaying = false;
                 isPaused = false;
                 waitingForInput = false;
                 DialogueEditorAudioPreview.Stop();
-                speakerLabel.text = "Simulator";
+                speakerLabel.text = "模拟器";
                 textLabel.text = "[条件未满足，模拟器已停止]";
                 choiceContainer.Clear();
                 UpdateStateLabels();
                 return;
             }
 
-            Log($"Enter sentence #{index + 1}: {ResolveSentenceTitle(sentence, index)}");
+            Log($"进入句子 #{index + 1}：{ResolveSentenceTitle(sentence, index)}");
             LogActions("EnterActions", sentence.EnterActions);
             if (sentence.VoiceClip != null && !DialogueEditorAudioPreview.Play(sentence.VoiceClip, out var error))
             {
-                Log($"Voice preview failed: {error}");
+                Log($"语音试听失败：{error}");
             }
 
             RenderCurrentSentence();
@@ -402,7 +402,7 @@ namespace NiumaGal.Editor
             isPaused = false;
             waitingForInput = false;
             DialogueEditorAudioPreview.Stop();
-            Log(completed ? "Dialogue completed." : "Dialogue aborted.");
+            Log(completed ? "对话模拟完成。" : "对话模拟中断。");
             UpdateStateLabels();
         }
 
@@ -411,14 +411,14 @@ namespace NiumaGal.Editor
             var sentence = ResolveCurrentSentence();
             if (sentence == null)
             {
-                speakerLabel.text = "Simulator";
-                textLabel.text = asset == null ? "No DialogueAsset selected." : "Click Play to preview dialogue locally.";
+                speakerLabel.text = "模拟器";
+                textLabel.text = asset == null ? "未选择 DialogueAsset。" : "点击“播放”在编辑器内预览对话。";
                 choiceContainer.Clear();
                 UpdateButtonState();
                 return;
             }
 
-            speakerLabel.text = string.IsNullOrWhiteSpace(sentence.Speaker) ? "Narration" : sentence.Speaker;
+            speakerLabel.text = string.IsNullOrWhiteSpace(sentence.Speaker) ? "旁白" : sentence.Speaker;
             var count = Mathf.Clamp(Mathf.FloorToInt(visibleCharacters), 0, fullText.Length);
             textLabel.text = fullText.Substring(0, count);
             RenderChoices(sentence);
@@ -453,7 +453,7 @@ namespace NiumaGal.Editor
                     : string.IsNullOrWhiteSpace(choice.DisabledText) ? choice.DisplayText : choice.DisabledText;
                 var button = new Button(() => SelectChoice(index))
                 {
-                    text = string.IsNullOrWhiteSpace(text) ? $"Choice {i + 1}" : text
+                    text = string.IsNullOrWhiteSpace(text) ? $"选项 {i + 1}" : text
                 };
                 button.SetEnabled(isAvailable);
                 button.style.marginBottom = 4f;
@@ -472,11 +472,11 @@ namespace NiumaGal.Editor
             var choice = sentence.Choices[choiceIndex];
             if (choice == null || !EvaluateConditions(choice.Conditions))
             {
-                Log("Choice blocked by simulator conditions.");
+                Log("选项被模拟条件阻止。");
                 return;
             }
 
-            Log($"Select choice: {DialogueEditorTextUtility.BuildTextSummary(choice.DisplayText, 36)}");
+            Log($"选择选项：{DialogueEditorTextUtility.BuildTextSummary(choice.DisplayText, 36)}");
             LogActions("ChoiceActions", choice.Actions);
             LogActions("ExitActions", sentence.ExitActions);
 
@@ -511,7 +511,7 @@ namespace NiumaGal.Editor
         {
             if (string.IsNullOrWhiteSpace(sentenceId) || !sentenceIdToIndex.TryGetValue(sentenceId, out var index))
             {
-                Log($"Jump target missing: {sentenceId}");
+                Log($"跳转目标不存在：{sentenceId}");
                 EndSimulation(true);
                 return;
             }
@@ -666,7 +666,7 @@ namespace NiumaGal.Editor
                     continue;
                 }
 
-                Log($"{scope}: {action.Type} Target={action.TargetId} (simulated only)");
+                Log($"{LocalizeActionScope(scope)}：{action.Type} 目标={action.TargetId}（仅模拟，不执行真实副作用）");
             }
         }
 
@@ -705,8 +705,8 @@ namespace NiumaGal.Editor
             if (statusLabel != null)
             {
                 statusLabel.text = isPlaying
-                    ? isPaused ? "Paused" : waitingForInput ? "Waiting Input" : "Playing"
-                    : "Stopped";
+                    ? isPaused ? "已暂停" : waitingForInput ? "等待输入" : "播放中"
+                    : "已停止";
             }
 
             UpdateButtonState();
@@ -721,7 +721,7 @@ namespace NiumaGal.Editor
             advanceButton?.SetEnabled(isPlaying && waitingForInput);
             if (pauseButton != null)
             {
-                pauseButton.text = isPaused ? "Resume" : "Pause";
+                pauseButton.text = isPaused ? "继续" : "暂停";
             }
 
             manualConditionToggle?.SetEnabled(conditionMode == DialogueSimulatorConditionMode.Manual);
@@ -731,12 +731,29 @@ namespace NiumaGal.Editor
         {
             return string.IsNullOrWhiteSpace(sentence?.SentenceId) ? $"#{index + 1}" : sentence.SentenceId;
         }
+
+        private static string LocalizeActionScope(string scope)
+        {
+            return scope switch
+            {
+                "OnStart" => "对话开始行为",
+                "OnComplete" => "正常结束行为",
+                "OnAbort" => "中断关闭行为",
+                "EnterActions" => "进入本句行为",
+                "ExitActions" => "离开本句行为",
+                "ChoiceActions" => "选项行为",
+                _ => scope ?? string.Empty
+            };
+        }
     }
 
     public enum DialogueSimulatorConditionMode
     {
+        [InspectorName("全部通过")]
         AllPass = 0,
+        [InspectorName("全部失败")]
         AllFail = 1,
+        [InspectorName("手动控制")]
         Manual = 2
     }
 }

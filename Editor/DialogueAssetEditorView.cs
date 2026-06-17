@@ -52,7 +52,7 @@ namespace NiumaGal.Editor
 
             if (context.Asset == null || context.SerializedObject == null)
             {
-                root.Add(new HelpBox("No DialogueAsset selected.", HelpBoxMessageType.Info));
+                root.Add(new HelpBox("未选择 DialogueAsset。请在顶部字段拖入要编辑的对话资产。", HelpBoxMessageType.Info));
                 return root;
             }
 
@@ -110,7 +110,7 @@ namespace NiumaGal.Editor
 
             if (context.HostKind == DialogueAssetEditorHostKind.EditorWindow)
             {
-                var assetSelector = new ObjectField("Dialogue Asset")
+                var assetSelector = new ObjectField("对话资产")
                 {
                     name = "DialogueAssetSelector",
                     objectType = typeof(DialogueAsset),
@@ -139,35 +139,35 @@ namespace NiumaGal.Editor
 
             var validateButton = new ToolbarButton(() => RunValidation(true))
             {
-                text = "Validate"
+                text = "校验"
             };
 
             var focusStartButton = new ToolbarButton(FocusStartSentence)
             {
-                text = "Focus Start"
+                text = "定位起始句"
             };
 
             var graphButton = new ToolbarButton(OpenGraphPreview)
             {
-                text = "Open Graph Preview"
+                text = "打开旧预览"
             };
 
             var rearrangeButton = new ToolbarButton(RearrangeGraph)
             {
-                text = "Rearrange"
+                text = "自动整理"
             };
 
             var cleanMetadataButton = new ToolbarButton(CleanGraphMetadata)
             {
-                text = "Clean Metadata"
+                text = "清理布局"
             };
 
             var rebuildButton = new ToolbarButton(RebuildIndex)
             {
-                text = "Rebuild Index"
+                text = "重建索引"
             };
 
-            toolbar.Add(new Label("Search"));
+            toolbar.Add(new Label("搜索"));
             toolbar.Add(searchField);
             toolbar.Add(new ToolbarSpacer());
             toolbar.Add(validateButton);
@@ -184,19 +184,19 @@ namespace NiumaGal.Editor
             var container = new Foldout
             {
                 name = "DialogueAssetInfo",
-                text = "Asset Info",
+                text = "资产信息",
                 value = context.HostKind != DialogueAssetEditorHostKind.EditorWindow
             };
             container.style.marginTop = 8f;
             container.style.marginBottom = 8f;
 
-            AddProperty(container, "DialogueId");
-            AddProperty(container, "DisplayName");
-            AddProperty(container, "StartSentenceId");
+            AddProperty(container, "DialogueId", "对话 ID");
+            AddProperty(container, "DisplayName", "显示名称");
+            AddProperty(container, "StartSentenceId", "起始句 ID");
             var assetActionCards = new DialogueActionCardBuilder(context.SerializedObject, RebuildIndex);
-            assetActionCards.AddCards(container, context.SerializedObject.FindProperty("OnStartActions"), "On Start Actions", "对话开始时执行，适合锁输入、切镜头、播放音效等入口行为。");
-            assetActionCards.AddCards(container, context.SerializedObject.FindProperty("OnCompleteActions"), "On Complete Actions", "对话正常完成时执行，适合推进任务、进入小游戏、切换剧情节点。");
-            assetActionCards.AddCards(container, context.SerializedObject.FindProperty("OnAbortActions"), "On Abort Actions", "对话被强制关闭或中断时执行。通常可以留空，避免误写进度。");
+            assetActionCards.AddCards(container, context.SerializedObject.FindProperty("OnStartActions"), "对话开始行为", "对话开始时执行，适合锁输入、切镜头、播放音效等入口行为。");
+            assetActionCards.AddCards(container, context.SerializedObject.FindProperty("OnCompleteActions"), "正常结束行为", "对话正常完成时执行，适合推进任务、进入小游戏、切换剧情节点。");
+            assetActionCards.AddCards(container, context.SerializedObject.FindProperty("OnAbortActions"), "中断关闭行为", "对话被强制关闭或中断时执行。通常可以留空，避免误写进度。");
             speakerEditorHelper?.AddSpeakerCatalogSelector(container);
 
             summaryLabel = new Label
@@ -259,13 +259,13 @@ namespace NiumaGal.Editor
             validationPanel.Clear();
             if (context.Asset == null)
             {
-                validationPanel.Add(new HelpBox("No DialogueAsset selected. Validation is unavailable.", HelpBoxMessageType.Info));
+                validationPanel.Add(new HelpBox("未选择 DialogueAsset，无法校验。", HelpBoxMessageType.Info));
                 return;
             }
 
             if (validationReport == null)
             {
-                validationPanel.Add(new HelpBox("Validation has not run yet. Click Validate or edit the asset to refresh.", HelpBoxMessageType.Info));
+                validationPanel.Add(new HelpBox("校验尚未运行。点击“校验”或修改资产后会自动刷新。", HelpBoxMessageType.Info));
                 return;
             }
 
@@ -275,7 +275,7 @@ namespace NiumaGal.Editor
                     ? HelpBoxMessageType.Warning
                     : HelpBoxMessageType.Info;
             validationPanel.Add(new HelpBox(
-                $"Validation: Error {validationReport.ErrorCount} / Warning {validationReport.WarningCount} / Info {validationReport.InfoCount}. Sentences {validationReport.SentenceCount}, Characters {validationReport.CharacterCount}, Estimated Read {validationReport.EstimatedReadSeconds}s, Branch Sentences {validationReport.BranchSentenceCount}.",
+                $"校验结果：错误 {validationReport.ErrorCount} / 警告 {validationReport.WarningCount} / 信息 {validationReport.InfoCount}。句子 {validationReport.SentenceCount}，字数 {validationReport.CharacterCount}，预计阅读 {validationReport.EstimatedReadSeconds} 秒，分支句 {validationReport.BranchSentenceCount}。",
                 summaryType));
 
             var items = validationReport.Items ?? Array.Empty<DialogueValidationItem>();
@@ -287,7 +287,7 @@ namespace NiumaGal.Editor
 
             if (items.Length > max)
             {
-                validationPanel.Add(new HelpBox($"Showing first {max} validation items. {items.Length - max} more items are hidden for now.", HelpBoxMessageType.Info));
+                validationPanel.Add(new HelpBox($"当前只显示前 {max} 条校验项，还有 {items.Length - max} 条暂时折叠。", HelpBoxMessageType.Info));
             }
         }
 
@@ -306,7 +306,7 @@ namespace NiumaGal.Editor
             row.style.alignItems = Align.Center;
             row.style.marginTop = 3f;
 
-            var label = new Label($"[{item.Severity}] {item.Code}: {item.Message}")
+            var label = new Label($"[{LocalizeSeverity(item.Severity)}] {item.Code}: {item.Message}")
             {
                 name = "DialogueValidationItemLabel"
             };
@@ -325,7 +325,7 @@ namespace NiumaGal.Editor
                     RebuildIndex();
                 })
                 {
-                    text = $"Focus #{targetIndex + 1}"
+                    text = $"定位 #{targetIndex + 1}"
                 });
             }
 
@@ -342,6 +342,16 @@ namespace NiumaGal.Editor
                 default:
                     return new Color(0.72f, 0.86f, 1f);
             }
+        }
+
+        private static string LocalizeSeverity(DialogueValidationSeverity severity)
+        {
+            return severity switch
+            {
+                DialogueValidationSeverity.Error => "错误",
+                DialogueValidationSeverity.Warning => "警告",
+                _ => "信息"
+            };
         }
 
         private void FocusStartSentence()
@@ -366,7 +376,7 @@ namespace NiumaGal.Editor
         {
             if (context.Asset == null)
             {
-                Debug.LogWarning("[NiumaGalEditor] No DialogueAsset selected. Graph Preview cannot open.");
+                Debug.LogWarning("[NiumaGalEditor] 未选择 DialogueAsset，无法打开旧版 Graph 预览。");
                 return;
             }
 
@@ -377,15 +387,15 @@ namespace NiumaGal.Editor
         {
             if (graphWorkspace == null)
             {
-                Debug.LogWarning("[NiumaGalEditor] Graph Workspace is not ready. Rearrange skipped.");
+                Debug.LogWarning("[NiumaGalEditor] Graph 工作区尚未就绪，已跳过自动整理。");
                 return;
             }
 
             if (!EditorUtility.DisplayDialog(
-                "Rearrange Dialogue Graph",
-                "Rearrange 会覆盖当前手动摆放的节点位置，并写入该 DialogueAsset 的 Graph Metadata。是否继续？",
-                "Rearrange",
-                "Cancel"))
+                "自动整理对话图",
+                "自动整理会覆盖当前手动摆放的节点位置，并写入该对话资产的 Graph 布局数据。是否继续？",
+                "自动整理",
+                "取消"))
             {
                 return;
             }
@@ -397,7 +407,7 @@ namespace NiumaGal.Editor
         {
             if (context.Asset == null)
             {
-                Debug.LogWarning("[NiumaGalEditor] No DialogueAsset selected. Metadata cleanup skipped.");
+                Debug.LogWarning("[NiumaGalEditor] 未选择 DialogueAsset，已跳过布局数据清理。");
                 return;
             }
 
@@ -409,10 +419,10 @@ namespace NiumaGal.Editor
             }
 
             if (!EditorUtility.DisplayDialog(
-                "Clean Dialogue Graph Metadata",
-                $"将删除 {orphanCount} 条已经找不到对应句子的 Graph Metadata。是否继续？",
-                "Clean",
-                "Cancel"))
+                "清理对话图布局数据",
+                $"将删除 {orphanCount} 条已经找不到对应句子的 Graph 布局数据。是否继续？",
+                "清理",
+                "取消"))
             {
                 return;
             }
@@ -420,7 +430,7 @@ namespace NiumaGal.Editor
             var removed = graphWorkspace?.CleanMetadata() ?? DialogueAssetEditorMetadataStore.CleanOrphanNodes(context.Asset);
             if (removed > 0)
             {
-                Debug.Log($"[NiumaGalEditor] Clean Metadata removed {removed} orphan graph nodes.");
+                Debug.Log($"[NiumaGalEditor] 已清理 {removed} 条孤儿 Graph 节点布局数据。");
             }
 
             RebuildIndex();
@@ -554,18 +564,20 @@ namespace NiumaGal.Editor
                 container.style.paddingTop = 6f;
                 container.style.paddingBottom = 6f;
                 container.Add(new HelpBox(
-                    $"Simulator 初始化失败。原因：{ex.GetType().Name}: {ex.Message}",
+                    $"模拟器初始化失败。原因：{ex.GetType().Name}: {ex.Message}",
                     HelpBoxMessageType.Warning));
                 return container;
             }
         }
 
-        private void AddProperty(VisualElement parent, string propertyName)
+        private void AddProperty(VisualElement parent, string propertyName, string label = null)
         {
             var property = context.SerializedObject.FindProperty(propertyName);
             if (property != null)
             {
-                var field = new PropertyField(property);
+                var field = string.IsNullOrWhiteSpace(label)
+                    ? new PropertyField(property)
+                    : new PropertyField(property, label);
                 field.TrackPropertyValue(property, _ => RebuildIndex());
                 parent.Add(field);
             }
@@ -790,7 +802,7 @@ namespace NiumaGal.Editor
             }
 
             var total = sentencesProperty != null && sentencesProperty.isArray ? sentencesProperty.arraySize : 0;
-            summaryLabel.text = $"Sentence Count: {total} | Filtered: {sentenceItems.Count}";
+            summaryLabel.text = $"句子总数：{total} | 当前筛选：{sentenceItems.Count}";
         }
 
         private SerializedProperty GetSentencesProperty()
@@ -838,14 +850,14 @@ namespace NiumaGal.Editor
         {
             if (item == null)
             {
-                return "<missing sentence>";
+                return "<缺失句子>";
             }
 
-            var id = string.IsNullOrWhiteSpace(item.SentenceId) ? "<empty id>" : item.SentenceId;
-            var speaker = string.IsNullOrWhiteSpace(item.Speaker) ? "Narration" : item.Speaker;
+            var id = string.IsNullOrWhiteSpace(item.SentenceId) ? "<空 ID>" : item.SentenceId;
+            var speaker = string.IsNullOrWhiteSpace(item.Speaker) ? "旁白" : item.Speaker;
             var summary = DialogueEditorTextUtility.BuildTextSummary(item.Text, 40);
-            var voice = item.HasVoice ? " | Voice" : string.Empty;
-            var choices = item.ChoiceCount > 0 ? $" | Choices:{item.ChoiceCount}" : string.Empty;
+            var voice = item.HasVoice ? " | 有语音" : string.Empty;
+            var choices = item.ChoiceCount > 0 ? $" | 选项:{item.ChoiceCount}" : string.Empty;
             return $"{id} | {speaker} | {summary}{voice}{choices}";
         }
 

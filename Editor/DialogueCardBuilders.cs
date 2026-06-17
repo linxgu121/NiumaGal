@@ -26,7 +26,7 @@ namespace NiumaGal.Editor
             };
             row.Add(new ToolbarButton(() => AddArrayElement(arrayProperty, initializer))
             {
-                text = $"Add {itemName}"
+                text = $"新增{LocalizeItemName(itemName)}"
             });
             parent.Add(row);
         }
@@ -43,7 +43,7 @@ namespace NiumaGal.Editor
             var capturedIndex = index;
             row.Add(new Button(() => DeleteArrayElementAndRefresh(arrayProperty, capturedIndex))
             {
-                text = $"Delete {itemName}"
+                text = $"删除{LocalizeItemName(itemName)}"
             });
             parent.Add(row);
         }
@@ -65,7 +65,7 @@ namespace NiumaGal.Editor
 
             if (count == 0)
             {
-                foldout.Add(new HelpBox("当前列表为空。点击下方 Add 按钮新增元素。", HelpBoxMessageType.Info));
+                foldout.Add(new HelpBox("当前列表为空。点击下方“新增”按钮添加一项。", HelpBoxMessageType.Info));
             }
 
             return foldout;
@@ -86,6 +86,17 @@ namespace NiumaGal.Editor
             card.style.borderLeftWidth = 2f;
             card.style.borderLeftColor = new Color(0.3f, 0.55f, 0.85f, 1f);
             return card;
+        }
+
+        protected static string LocalizeItemName(string itemName)
+        {
+            return itemName switch
+            {
+                "Condition" => "条件",
+                "Action" => "行为",
+                "Choice" => "选项",
+                _ => itemName ?? string.Empty
+            };
         }
 
         private void AddArrayElement(SerializedProperty arrayProperty, Action<SerializedProperty> initializer)
@@ -147,7 +158,7 @@ namespace NiumaGal.Editor
                 return;
             }
 
-            var foldout = BuildArrayFoldout($"{title} ({conditionsProperty.arraySize})", timingDescription, conditionsProperty.arraySize);
+            var foldout = BuildArrayFoldout($"{title}（{conditionsProperty.arraySize}）", timingDescription, conditionsProperty.arraySize);
             AddArrayCommandRow(foldout, conditionsProperty, "Condition", InitializeElement);
 
             for (var i = 0; i < conditionsProperty.arraySize; i++)
@@ -164,15 +175,15 @@ namespace NiumaGal.Editor
 
         private void AddBody(VisualElement parent, SerializedProperty condition)
         {
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "ConditionId", "Condition Id", OnChanged);
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "Type", "Condition Type", OnChanged);
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "TargetId", "Target Id", OnChanged);
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "Operator", "Operator", OnChanged);
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "StringValue", "String Value", OnChanged);
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "IntValue", "Int Value", OnChanged);
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "FloatValue", "Float Value", OnChanged);
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "BoolValue", "Bool Value", OnChanged);
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "CustomData", "Custom Data", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "ConditionId", "条件 ID", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "Type", "条件类型", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "TargetId", "目标 ID", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "Operator", "运算符", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "StringValue", "字符串值", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "IntValue", "整数值", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "FloatValue", "小数值", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "BoolValue", "布尔值", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, condition, "CustomData", "自定义数据", OnChanged);
         }
 
         private static void InitializeElement(SerializedProperty condition)
@@ -193,7 +204,7 @@ namespace NiumaGal.Editor
             var type = DialogueSerializedPropertyUtility.GetEnumDisplayName(condition, "Type");
             var id = DialogueSerializedPropertyUtility.GetString(condition, "ConditionId");
             var target = DialogueSerializedPropertyUtility.GetString(condition, "TargetId");
-            return $"{index + 1}. {type} | {DialogueSerializedPropertyUtility.Fallback(id, "<no id>")} | Target:{DialogueSerializedPropertyUtility.Fallback(target, "<empty>")}";
+            return $"{index + 1}. {type} | {DialogueSerializedPropertyUtility.Fallback(id, "<无 ID>")} | 目标:{DialogueSerializedPropertyUtility.Fallback(target, "<空>")}";
         }
     }
 
@@ -211,7 +222,7 @@ namespace NiumaGal.Editor
                 return;
             }
 
-            var foldout = BuildArrayFoldout($"{title} ({actionsProperty.arraySize})", timingDescription, actionsProperty.arraySize);
+            var foldout = BuildArrayFoldout($"{title}（{actionsProperty.arraySize}）", timingDescription, actionsProperty.arraySize);
             AddArrayCommandRow(foldout, actionsProperty, "Action", InitializeElement);
 
             for (var i = 0; i < actionsProperty.arraySize; i++)
@@ -228,15 +239,15 @@ namespace NiumaGal.Editor
 
         private void AddBody(VisualElement parent, SerializedProperty action)
         {
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "ActionId", "Action Id", OnChanged);
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "Type", "Action Type", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "ActionId", "行为 ID", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "Type", "行为类型", OnChanged);
             parent.Add(new HelpBox(GetTargetHint(action), HelpBoxMessageType.Info));
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "TargetId", "Target Id", OnChanged);
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "StringValue", "String Value", OnChanged);
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "IntValue", "Int Value", OnChanged);
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "FloatValue", "Float Value", OnChanged);
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "BoolValue", "Bool Value", OnChanged);
-            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "CustomData", "Custom Data", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "TargetId", "目标 ID", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "StringValue", "字符串值", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "IntValue", "整数值", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "FloatValue", "小数值", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "BoolValue", "布尔值", OnChanged);
+            DialogueSerializedPropertyUtility.AddRelativeProperty(parent, action, "CustomData", "自定义数据", OnChanged);
         }
 
         private static void InitializeElement(SerializedProperty action)
@@ -256,7 +267,7 @@ namespace NiumaGal.Editor
             var type = DialogueSerializedPropertyUtility.GetEnumDisplayName(action, "Type");
             var id = DialogueSerializedPropertyUtility.GetString(action, "ActionId");
             var target = DialogueSerializedPropertyUtility.GetString(action, "TargetId");
-            return $"{index + 1}. {type} | {DialogueSerializedPropertyUtility.Fallback(id, "<no id>")} | Target:{DialogueSerializedPropertyUtility.Fallback(target, "<empty>")}";
+            return $"{index + 1}. {type} | {DialogueSerializedPropertyUtility.Fallback(id, "<无 ID>")} | 目标:{DialogueSerializedPropertyUtility.Fallback(target, "<空>")}";
         }
 
         private static string GetTargetHint(SerializedProperty action)
@@ -265,29 +276,29 @@ namespace NiumaGal.Editor
             switch (type)
             {
                 case "StartDialogue":
-                    return "TargetId: fill DialogueId.";
+                    return "TargetId：填写要启动的 DialogueId。";
                 case "EndDialogue":
-                    return "TargetId: usually empty.";
+                    return "TargetId：通常留空。";
                 case "OpenMiniGame":
-                    return "TargetId: fill MiniGame entry id or mode id.";
+                    return "TargetId：填写小游戏入口 ID 或模式 ID。";
                 case "AcceptQuest":
-                    return "TargetId: fill QuestId.";
+                    return "TargetId：填写 QuestId。";
                 case "PushQuestSignal":
-                    return "TargetId: fill SignalId.";
+                    return "TargetId：填写 SignalId。";
                 case "StartStory":
-                    return "TargetId: fill StoryId.";
+                    return "TargetId：填写 StoryId。";
                 case "SetStoryFlag":
-                    return "TargetId: fill FlagId.";
+                    return "TargetId：填写 FlagId。";
                 case "LoadScene":
-                    return "TargetId: fill scene name.";
+                    return "TargetId：填写场景名。";
                 case "RequestCheckpointSave":
-                    return "TargetId: usually empty.";
+                    return "TargetId：通常留空。";
                 case "PlayAudioCue":
-                    return "TargetId: fill AudioCueDefinition.CueId.";
+                    return "TargetId：填写 AudioCueDefinition.CueId。";
                 case "Custom":
-                    return "TargetId/CustomData: interpreted by custom ActionHandler.";
+                    return "TargetId / CustomData：由自定义 ActionHandler 解释。";
                 default:
-                    return "TargetId usage depends on Action Type.";
+                    return "TargetId 的用途取决于行为类型。";
             }
         }
     }
@@ -316,25 +327,25 @@ namespace NiumaGal.Editor
             }
 
             var foldout = BuildArrayFoldout(
-                $"Choices ({choicesProperty.arraySize})",
+                $"选项（{choicesProperty.arraySize}）",
                 "文字播放完成后显示给玩家的选项。ChoiceId 必填，运行时点击依赖它。",
                 choicesProperty.arraySize);
             AddArrayCommandRow(foldout, choicesProperty, "Choice", InitializeElement);
-            foldout.Add(new HelpBox("Choice 点击顺序：先执行 Choice Actions，再执行当前句子的 Exit Actions，最后应用 Behavior。", HelpBoxMessageType.Info));
+            foldout.Add(new HelpBox("选项点击顺序：先执行 Choice Actions，再执行当前句子的 Exit Actions，最后应用 Behavior。", HelpBoxMessageType.Info));
 
             for (var i = 0; i < choicesProperty.arraySize; i++)
             {
                 var choice = choicesProperty.GetArrayElementAtIndex(i);
                 var card = BuildCardFoldout(BuildCardTitle(choice, i));
                 AddCardDeleteButton(card, choicesProperty, i, "Choice");
-                DialogueSerializedPropertyUtility.AddRelativeProperty(card, choice, "ChoiceId", "Choice Id", OnChanged);
-                DialogueSerializedPropertyUtility.AddRelativeProperty(card, choice, "DisplayText", "Display Text", OnChanged);
-                DialogueSerializedPropertyUtility.AddRelativeProperty(card, choice, "Behavior", "Behavior", OnChanged);
-                DialogueSerializedPropertyUtility.AddRelativeProperty(card, choice, "NextSentenceId", "Next Sentence Id", OnChanged);
-                DialogueSerializedPropertyUtility.AddRelativeProperty(card, choice, "HideWhenUnavailable", "Hide When Unavailable", OnChanged);
-                DialogueSerializedPropertyUtility.AddRelativeProperty(card, choice, "DisabledText", "Disabled Text", OnChanged);
-                conditionCardBuilder.AddCards(card, choice.FindPropertyRelative("Conditions"), "Choice Conditions", "该选项显示或可点击前需要满足的条件。");
-                actionCardBuilder.AddCards(card, choice.FindPropertyRelative("Actions"), "Choice Actions", "玩家点击该选项后立即执行，然后再执行当前句子的 Exit Actions。");
+                DialogueSerializedPropertyUtility.AddRelativeProperty(card, choice, "ChoiceId", "选项 ID", OnChanged);
+                DialogueSerializedPropertyUtility.AddRelativeProperty(card, choice, "DisplayText", "显示文本", OnChanged);
+                DialogueSerializedPropertyUtility.AddRelativeProperty(card, choice, "Behavior", "跳转行为", OnChanged);
+                DialogueSerializedPropertyUtility.AddRelativeProperty(card, choice, "NextSentenceId", "目标句 ID", OnChanged);
+                DialogueSerializedPropertyUtility.AddRelativeProperty(card, choice, "HideWhenUnavailable", "条件不满足时隐藏", OnChanged);
+                DialogueSerializedPropertyUtility.AddRelativeProperty(card, choice, "DisabledText", "不可用文本", OnChanged);
+                conditionCardBuilder.AddCards(card, choice.FindPropertyRelative("Conditions"), "选项条件", "该选项显示或可点击前需要满足的条件。");
+                actionCardBuilder.AddCards(card, choice.FindPropertyRelative("Actions"), "选项行为", "玩家点击该选项后立即执行，然后再执行当前句子的 Exit Actions。");
                 foldout.Add(card);
             }
 
@@ -358,7 +369,7 @@ namespace NiumaGal.Editor
             var id = DialogueSerializedPropertyUtility.GetString(choice, "ChoiceId");
             var text = DialogueSerializedPropertyUtility.GetString(choice, "DisplayText");
             var behavior = DialogueSerializedPropertyUtility.GetEnumDisplayName(choice, "Behavior");
-            return $"{index + 1}. {DialogueSerializedPropertyUtility.Fallback(id, "<empty choice id>")} | {behavior} | {DialogueEditorTextUtility.BuildTextSummary(text, 24)}";
+            return $"{index + 1}. {DialogueSerializedPropertyUtility.Fallback(id, "<空选项 ID>")} | {behavior} | {DialogueEditorTextUtility.BuildTextSummary(text, 24)}";
         }
     }
 }
